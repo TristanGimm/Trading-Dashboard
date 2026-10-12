@@ -161,6 +161,16 @@ try {
   await page.getByRole('heading', { name: 'Recorded confluence outcomes' }).waitFor();
   await page.getByRole('heading', { name: 'MFE & MAE · 30 minutes' }).waitFor();
   await page.getByRole('img', { name: 'MFE versus MAE for trades with both 30 minute measurements' }).waitFor();
+  const excursionChart = page.getByRole('img', { name: 'MFE versus MAE for trades with both 30 minute measurements' });
+  await excursionChart.scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => {
+    const chart = document.querySelector('[aria-label="MFE versus MAE for trades with both 30 minute measurements"] canvas');
+    if (!chart) return false;
+    const pixels = chart.getContext('2d').getImageData(0, 0, chart.width, chart.height).data;
+    let markers = 0;
+    for (let i = 0; i < pixels.length; i += 4) if (pixels[i] > 100 && pixels[i] < 180 && pixels[i + 1] > 90 && pixels[i + 1] < 160 && pixels[i + 2] > 200 && pixels[i + 3] > 100) markers++;
+    return markers > 100;
+  }, undefined, { timeout: 10000 });
   await noOverflow(1440);
   await page.getByRole('combobox', { name: 'Setup group' }).selectOption('Setup');
   await page.getByRole('combobox', { name: 'Minimum sample size' }).selectOption('10');
