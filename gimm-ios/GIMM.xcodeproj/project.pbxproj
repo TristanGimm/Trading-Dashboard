@@ -1,0 +1,25 @@
+// !$*UTF8*$!
+{ archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
+000000000000000000000001 = { isa = PBXProject; attributes = { LastUpgradeCheck = 1600; }; buildConfigurationList = 00000000000000000000001E; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; knownRegions = (en, Base); mainGroup = 000000000000000000000002; productRefGroup = 000000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (000000000000000000000004); };
+000000000000000000000002 = { isa = PBXGroup; children = (000000000000000000000005, 000000000000000000000003); sourceTree = "<group>"; };
+000000000000000000000003 = { isa = PBXGroup; children = (000000000000000000000006); name = Products; sourceTree = "<group>"; };
+000000000000000000000005 = { isa = PBXGroup; children = (000000000000000000000007, 000000000000000000000008, 000000000000000000000009, 00000000000000000000000A); path = GIMM; sourceTree = "<group>"; };
+000000000000000000000006 = { isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GIMM.app; sourceTree = BUILT_PRODUCTS_DIR; };
+000000000000000000000007 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIMMApp.swift; sourceTree = "<group>"; };
+000000000000000000000008 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardBrowser.swift; sourceTree = "<group>"; };
+000000000000000000000009 = { isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+00000000000000000000000A = { isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+000000000000000000000004 = { isa = PBXNativeTarget; buildConfigurationList = 00000000000000000000001F; buildPhases = (000000000000000000000014, 000000000000000000000015, 000000000000000000000016); buildRules = (); dependencies = (); name = GIMM; productName = GIMM; productReference = 000000000000000000000006; productType = "com.apple.product-type.application"; };
+00000000000000000000000B = { isa = PBXBuildFile; fileRef = 000000000000000000000007; };
+00000000000000000000000C = { isa = PBXBuildFile; fileRef = 000000000000000000000008; };
+00000000000000000000000D = { isa = PBXBuildFile; fileRef = 00000000000000000000000A; };
+000000000000000000000014 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (00000000000000000000000B, 00000000000000000000000C); runOnlyForDeploymentPostprocessing = 0; };
+000000000000000000000015 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+000000000000000000000016 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (00000000000000000000000D); runOnlyForDeploymentPostprocessing = 0; };
+00000000000000000000001E = { isa = XCConfigurationList; buildConfigurations = (000000000000000000000020, 000000000000000000000021); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+00000000000000000000001F = { isa = XCConfigurationList; buildConfigurations = (000000000000000000000022, 000000000000000000000023); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+000000000000000000000020 = { isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; }; name = Debug; };
+000000000000000000000021 = { isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; }; name = Release; };
+000000000000000000000022 = { isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = GIMM/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 1.0.0; PRODUCT_BUNDLE_IDENTIFIER = com.gimmholding.dashboard; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
+000000000000000000000023 = { isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = GIMM/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 1.0.0; PRODUCT_BUNDLE_IDENTIFIER = com.gimmholding.dashboard; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; SWIFT_OPTIMIZATION_LEVEL = "-O"; }; name = Release; };
+}; rootObject = 000000000000000000000001; }
