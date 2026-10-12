@@ -1962,3 +1962,17 @@ body { color:inherit; }
  .metrics-secondary .metric-card { padding:14px 12px; }
 }
 .command-kpis .streak-columns p { display:flex; margin-top:5px; gap:3px 7px; font-size:7px; }
+
+.excursion-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding:24px; }
+.excursion-summary>div { padding:20px; border:1px solid var(--border, #ffffff0d); border-radius:12px; background:linear-gradient(135deg,#9985ff08,transparent); }
+.excursion-summary strong { display:block; font-size:30px; font-weight:550; margin:12px 0 8px; letter-spacing:-1px; }
+.excursion-summary strong small { font-size:16px; color:#778399; font-weight:400; }
+.excursion-summary p,.excursion-chart-heading p,.excursion-context { font-size:11px; color:#778399; line-height:1.7; }
+.excursion-summary p span { display:block; }
+.excursion-chart-heading { padding:8px 24px 0; display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap; }
+.excursion-chart-heading h3 { font-size:13px; font-weight:550; margin:0 0 5px; }
+.excursion-context { padding:0 24px 20px; margin:0; }
+.excursion-details { border-top:1px solid #ffffff0d; }
+.excursion-details summary { cursor:pointer; padding:18px 24px; font-size:12px; }
+.excursion-details summary span { color:#778399; margin-left:12px; }
+@media(max-width:600px) { .excursion-summary { padding:16px; gap:8px; grid-template-columns:1fr; } .excursion-summary>div { padding:14px; } .excursion-summary strong { font-size:26px; } .excursion-chart-heading { padding:8px 16px; } }
