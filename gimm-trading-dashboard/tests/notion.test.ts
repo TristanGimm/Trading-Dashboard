@@ -55,3 +55,13 @@ test('pagination stops when has_more is false and skips archived pages',async()=
  const trades=await fetchAllNotionTrades({token:'local-fake-token',dataSourceId:'local-fake-source'},fake);
  assert.equal(count,1);assert.deepEqual(trades.map(t=>t.id),['2']);
 });
+test('imports recorded win and the exact journal excursion fields without inventing net P&L',()=>{
+ const p=page('113');p.properties['Net €']={number:null};
+ p.properties.Win={multi_select:[{name:'Win'}]};
+ p.properties['MFE(30 min)']={number:0.3};p.properties['MAE (30min)']={number:0};
+ p.properties['TF Type']={multi_select:[{name:'5s Type 3'}]};p.properties['Fractal Shift']={checkbox:true};
+ const t=mapNotionTrade(p);
+ assert.equal(t.netEur,null);assert.equal(t.recordedOutcome,'win');assert.equal(t.mfe30m,0.3);assert.equal(t.mae30m,0);
+ assert.deepEqual(t.tfType,['5s Type 3']);assert.equal(t.fractalShift,true);
+ p.properties.Loss={multi_select:[{name:'Loss'}]};assert.equal(mapNotionTrade(p).recordedOutcome,null);
+});

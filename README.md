@@ -13,7 +13,7 @@ The idea is to keep the workflow simple: record and edit trades in Notion, then 
 - **Overview:** net P&L, win rate, profit factor, drawdown, equity, recorded account balance and recent trades.
 - **Trade journal:** search, filtering, sorting, pagination, trade details and CSV export.
 - **Trading calendar:** daily results, trade counts and drilldown into a selected day.
-- **Analytics:** comparisons by setup, confirmations, session, weekday, entry hour and month.
+- **Analytics:** comparisons by setup, confirmations, session, weekday, entry hour and month; recorded Win/Loss confluence outcomes; 30-minute MFE/MAE averages, scatter plot and individual measurements.
 - **Daily preparation:** a checklist and notes saved in the browser, separately for each day and account.
 - **Filters:** Forwardtesting, Backtest or all accounts; the last 30, 90 or 365 days, or all history. Additional filters cover instrument, setup, session, outcome and date range.
 - **Interface:** private login, responsive navigation and light/dark themes.
@@ -97,6 +97,8 @@ The main calculations live in [lib/analytics.ts](gimm-trading-dashboard/lib/anal
 | Equity curve | Cumulative realized P&L, starting at zero. |
 | Drawdown | Drop from the preceding peak of cumulative P&L, rather than an intratrade measurement. |
 | Account balance | Values recorded in Notion, separately from cumulative P&L because they may include transfers. |
+
+Notion Win/Loss tags are stored separately from Net €. Recorded confluence outcomes can include tagged trades without amounts; these trades remain excluded from financial statistics and display a missing-amount notice. Net € takes precedence over tags. TF Type comparisons include new tags automatically, including 5s Type 3. MFE/MAE read the exact journal fields `MFE(30 min)` and `MAE (30min)` without converting units; each average excludes only its missing measurements.
 
 Calendar and timing groups use the configured timezone, defaulting to `Europe/Berlin`. Timing analysis uses entry times. Setup and session highlights require at least five closed trades per group. These comparisons describe the journal history; they are not predictions.
 

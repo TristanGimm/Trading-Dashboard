@@ -158,6 +158,10 @@ try {
   await navigate('Analytics');
   await page.getByRole('heading', { name: 'Understand your edge.' }).waitFor();
   await chartsReady();
+  await page.getByRole('heading', { name: 'Recorded confluence outcomes' }).waitFor();
+  await page.getByRole('heading', { name: 'MFE & MAE · 30 minutes' }).waitFor();
+  await page.getByRole('img', { name: 'MFE versus MAE for trades with both 30 minute measurements' }).waitFor();
+  await noOverflow(1440);
   await page.getByRole('combobox', { name: 'Setup group' }).selectOption('Setup');
   await page.getByRole('combobox', { name: 'Minimum sample size' }).selectOption('10');
   await page.getByRole('button', { name: 'Win rate', exact: true }).click();
@@ -166,6 +170,9 @@ try {
 
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
+    await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Analytics', exact: true }).click();
+    await page.getByRole('heading', { name: 'MFE & MAE · 30 minutes' }).waitFor();
+    await chartsReady(); await noOverflow(width);
     await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Overview', exact: true }).click();
     await page.getByRole('heading', { name: 'Master Trading Dashboard' }).waitFor();
     await chartsReady(); await noOverflow(width);

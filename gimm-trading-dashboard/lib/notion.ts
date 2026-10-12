@@ -55,6 +55,8 @@ export function mapNotionTrade(input:NotionPage):Trade {
   const tradeNumber=Number.isSafeInteger(numericId)&&numericId<=2147483647?numericId:null;
   return {
     id:page.id,tradeId,tradeNumber,account:multi(page,'Account'),dateTime:notionTime(page),day:select(page,'Day'),
+    recordedOutcome:multi(page,'Win').includes('Win')&&!multi(page,'Loss').includes('Loss')?'win':multi(page,'Loss').includes('Loss')&&!multi(page,'Win').includes('Win')?'loss':null,
+    mfe30m:num(page,'MFE(30 min)'),mae30m:num(page,'MAE (30min)'),
     pair:select(page,'Pair'),position:select(page,'Position'),netEur:num(page,'Net €'),accountBalance:num(page,'Account Balance'),rMultiple:num(page,'R'),
     setup:multi(page,'Setup'),tfType:multi(page,'TF Type'),algorithm:multi(page,'Algorithm'),sessionTime:multi(page,'Session Time'),
     liquiditySweep:yes(page,'Liquidity Sweep'),dxy:yes(page,'DXY'),delta:yes(page,'Delta'),fractalShift:yes(page,'Fractal Shift'),

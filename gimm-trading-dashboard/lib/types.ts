@@ -8,6 +8,9 @@ export type Trade = {
   pair: string | null;
   position: string | null;
   netEur: number | null;
+  recordedOutcome?: Outcome | null;
+  mfe30m?: number | null;
+  mae30m?: number | null;
   accountBalance: number | null;
   rMultiple: number | null;
   setup: string[];

@@ -48,6 +48,7 @@ export function calculatePerformance(trades:Trade[],timeZone='Europe/Berlin'):Pe
   const cumulativeByDay=new Map<string,number>();const balanceByDay=new Map<string,number>();
   const setup=new Map<string,Bucket>(),session=new Map<string,Bucket>(),weekday=new Map<string,Bucket>(),hour=new Map<string,Bucket>(),month=new Map<string,Bucket>();
   function addConfluence(label:string,flag:boolean,net:number){record(setup,`${label} · ${flag?'Yes':'No / untagged'}`,net);}
+  const tfTypes=new Set(['1m Type 3','5s Type 3',...trades.flatMap(trade=>trade.tfType)]);
   for(const t of sorted){
     const n=t.netEur;pnl+=n;best=best===null? n:Math.max(best,n);worst=worst===null?n:Math.min(worst,n);
     if(n>0){wins++;profit+=n;}else if(n<0){losses++;loss-=n;}else even++;
@@ -58,7 +59,7 @@ export function calculatePerformance(trades:Trade[],timeZone='Europe/Berlin'):Pe
     for(const item of new Set(t.sessionTime))record(session,item,n);
     addConfluence('Liquidity Sweep',t.liquiditySweep,n);
     addConfluence('DXY Confirmation',t.dxy,n);
-    addConfluence('1m Type 3 Shift',t.tfType.includes('1m Type 3'),n);
+    for(const tf of tfTypes)addConfluence(`${tf} Shift`,t.tfType.includes(tf),n);
     addConfluence('Fractal Shift',t.fractalShift,n);
     addConfluence('Delta',t.delta,n);
     const parts=t.dateTime?groupTime(t.dateTime,timeZone):null;

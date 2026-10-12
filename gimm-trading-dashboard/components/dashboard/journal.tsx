@@ -26,7 +26,7 @@ export function TradeTable({ trades, timeZone, onTrade }: { trades: Trade[]; tim
     <td><span className={`trade-tag ${trade.position?.toLowerCase() === 'long' ? 'long' : trade.position?.toLowerCase() === 'short' ? 'short' : ''}`}>{trade.position?.toLowerCase() === 'long' ? <ArrowUpRight size={11}/> : trade.position?.toLowerCase() === 'short' ? <ArrowDownLeft size={11}/> : null}{trade.position || '—'}</span></td>
     <td><span className="trade-tag" title={trade.setup.join(', ')}>{trade.setup[0] || 'Untagged'}{trade.setup.length > 1 ? ` +${trade.setup.length - 1}` : ''}</span></td>
     <td className="tabular">{trade.rMultiple === null ? '—' : `${number(trade.rMultiple)}R`}</td>
-    <td className={`table-pnl ${trade.netEur !== null && trade.netEur < 0 ? 'negative' : trade.netEur ? 'positive' : ''}`}>{trade.netEur === null ? 'Unrecorded' : money(trade.netEur)}</td>
+    <td className={`table-pnl ${trade.netEur !== null && trade.netEur < 0 ? 'negative' : trade.netEur ? 'positive' : ''}`}>{trade.netEur === null ? trade.recordedOutcome ? `${trade.recordedOutcome} · Net € missing` : 'Unrecorded' : money(trade.netEur)}</td>
   </tr>)}</tbody></table></div>;
 }
 

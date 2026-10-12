@@ -48,6 +48,9 @@ CREATE TABLE IF NOT EXISTS trades (
   last_seen_run TEXT NOT NULL,
   synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE trades ADD COLUMN IF NOT EXISTS recorded_outcome TEXT;
+ALTER TABLE trades ADD COLUMN IF NOT EXISTS mfe_30m DOUBLE PRECISION;
+ALTER TABLE trades ADD COLUMN IF NOT EXISTS mae_30m DOUBLE PRECISION;
 CREATE INDEX IF NOT EXISTS idx_trades_date ON trades(date_time);
 CREATE INDEX IF NOT EXISTS idx_trades_account ON trades USING GIN (account);
 CREATE TABLE IF NOT EXISTS sync_status (
@@ -62,12 +65,13 @@ INSERT INTO sync_status (id) VALUES (1) ON CONFLICT DO NOTHING;
 export async function initSchema() {await getPool().query(schema);}
 
 const selectSql=`SELECT id,trade_id,trade_number,account,date_time,day_label,pair,position,net_eur,account_balance,
- r_multiple,setup,tf_type,algorithm,session_time,liquidity_sweep,dxy,delta,fractal_shift,last_edited_time
+ r_multiple,setup,tf_type,algorithm,session_time,liquidity_sweep,dxy,delta,fractal_shift,last_edited_time,recorded_outcome,mfe_30m,mae_30m
  FROM trades`;
 export async function listTrades(filter:TradeFilter={}): Promise<Trade[]> {
   const where=buildTradeWhere(filter);
   const r=await getPool().query(selectSql+where.sql+' ORDER BY date_time ASC NULLS LAST, trade_number ASC NULLS LAST, id ASC',where.values);
   return r.rows.map(x=>({
+    recordedOutcome:x.recorded_outcome??null,mfe30m:x.mfe_30m??null,mae30m:x.mae_30m??null,
     id:x.id,tradeId:x.trade_id,tradeNumber:x.trade_number,account:x.account||[],
     dateTime:x.date_time?.toISOString()??null,day:x.day_label,pair:x.pair,position:x.position,
     netEur:x.net_eur===null?null:Number(x.net_eur),accountBalance:x.account_balance===null?null:Number(x.account_balance),

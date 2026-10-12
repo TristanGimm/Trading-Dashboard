@@ -18,8 +18,8 @@ export async function syncNotion(fetcher:typeof fetch=fetch) {
     for(const t of notion){
       await client.query(`INSERT INTO trades (
         id,trade_id,trade_number,account,date_time,day_label,pair,position,net_eur,account_balance,r_multiple,
-        setup,tf_type,algorithm,session_time,liquidity_sweep,dxy,delta,fractal_shift,last_edited_time,last_seen_run
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+        setup,tf_type,algorithm,session_time,liquidity_sweep,dxy,delta,fractal_shift,last_edited_time,last_seen_run,recorded_outcome,mfe_30m,mae_30m
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
       ON CONFLICT(id) DO UPDATE SET
         trade_id=EXCLUDED.trade_id,trade_number=EXCLUDED.trade_number,account=EXCLUDED.account,
         date_time=EXCLUDED.date_time,day_label=EXCLUDED.day_label,pair=EXCLUDED.pair,
@@ -28,9 +28,10 @@ export async function syncNotion(fetcher:typeof fetch=fetch) {
         algorithm=EXCLUDED.algorithm,session_time=EXCLUDED.session_time,
         liquidity_sweep=EXCLUDED.liquidity_sweep,dxy=EXCLUDED.dxy,delta=EXCLUDED.delta,
         fractal_shift=EXCLUDED.fractal_shift,last_edited_time=EXCLUDED.last_edited_time,
+        recorded_outcome=EXCLUDED.recorded_outcome,mfe_30m=EXCLUDED.mfe_30m,mae_30m=EXCLUDED.mae_30m,
         last_seen_run=EXCLUDED.last_seen_run,synced_at=NOW()`,
       [t.id,t.tradeId,t.tradeNumber,t.account,t.dateTime,t.day,t.pair,t.position,t.netEur,t.accountBalance,t.rMultiple,
-        t.setup,t.tfType,t.algorithm,t.sessionTime,t.liquiditySweep,t.dxy,t.delta,t.fractalShift,t.lastEditedTime,run]);
+        t.setup,t.tfType,t.algorithm,t.sessionTime,t.liquiditySweep,t.dxy,t.delta,t.fractalShift,t.lastEditedTime,run,t.recordedOutcome??null,t.mfe30m??null,t.mae30m??null]);
     }
     if(deleteMissing)await client.query('DELETE FROM trades WHERE last_seen_run<>$1',[run]);
     await client.query('UPDATE sync_status SET last_synced_at=NOW(),last_error=$1,last_count=$2,state=$3 WHERE id=1',

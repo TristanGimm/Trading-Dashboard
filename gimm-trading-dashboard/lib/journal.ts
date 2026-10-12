@@ -1,3 +1,4 @@
+import { recordedOutcome } from './execution.ts';
 import type { Trade } from './types.ts';
 
 export type TradingDay = { date: string; pnl: number; count: number; closed: number; wins: number; trades: Trade[] };
@@ -47,7 +48,7 @@ export function filterJournal(trades: Trade[], filters: JournalFilters): Trade[]
   const search = filters.search.trim().toLocaleLowerCase();
   return trades.filter(trade => {
     if (filters.pair !== 'all' && trade.pair !== filters.pair) return false;
-    const outcome = trade.netEur === null ? 'unrecorded' : trade.netEur > 0 ? 'win' : trade.netEur < 0 ? 'loss' : 'breakeven';
+    const outcome = recordedOutcome(trade) ?? 'unrecorded';
     if (filters.outcome !== 'all' && filters.outcome !== outcome) return false;
     return !search || [trade.tradeId, trade.pair, trade.position, ...trade.setup, ...trade.sessionTime, ...trade.account].filter(Boolean).join(' ').toLocaleLowerCase().includes(search);
   }).sort((a, b) => {
@@ -73,8 +74,8 @@ function csvCell(value: string | number | null): string {
 }
 
 export function tradesToCsv(trades: Trade[]): string {
-  const rows: (string | number | null)[][] = [['Trade', 'Entry time (ISO)', 'Account', 'Pair', 'Direction', 'Setup', 'Session', 'Net EUR', 'R multiple']];
-  for (const trade of trades) rows.push([trade.tradeId, trade.dateTime, trade.account.join(' / '), trade.pair, trade.position, trade.setup.join(' / '), trade.sessionTime.join(' / '), trade.netEur, trade.rMultiple]);
+  const rows: (string | number | null)[][] = [['Trade', 'Entry time (ISO)', 'Account', 'Pair', 'Direction', 'Setup', 'Session', 'Net EUR', 'R multiple', 'Recorded outcome', 'TF Type', 'Fractal Shift', 'MFE (30 min)', 'MAE (30 min)']];
+  for (const trade of trades) rows.push([trade.tradeId, trade.dateTime, trade.account.join(' / '), trade.pair, trade.position, trade.setup.join(' / '), trade.sessionTime.join(' / '), trade.netEur, trade.rMultiple, trade.recordedOutcome??null, trade.tfType.join(' / '), trade.fractalShift?'Yes':'No', trade.mfe30m??null, trade.mae30m??null]);
   return '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n');
 }
 

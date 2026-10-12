@@ -41,3 +41,8 @@ test('time windows reject future and invalid dates and include exact boundaries'
  const ts=[mock('1',1,{dateTime:'2099-01-01T00:00:00Z'}),mock('2',1,{dateTime:'invalid'}),mock('3',1,{dateTime:now.toISOString()}),mock('4',1,{dateTime:'2026-09-08T12:00:00Z'}),mock('5',1,{dateTime:'2026-09-08T11:59:59Z'})];
  assert.deepEqual(filterTrades(ts,'Forwardtesting','30d',now).map(t=>t.id),['3','4']);
 });
+test('new TF types are compared dynamically and duplicate tags count once',()=>{
+ const p=calculatePerformance([mock('1',50,{tfType:['5s Type 3','5s Type 3','new type'],fractalShift:true}),mock('2',-10)]);
+ assert.equal(p.comparisons.find(c=>c.label==='5s Type 3 Shift · Yes')?.count,1);
+ assert.equal(p.comparisons.find(c=>c.label==='new type Shift · Yes')?.totalPnl,50);
+});
