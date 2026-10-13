@@ -1,12 +1,12 @@
-# GIMM Trading Dashboard
+# Trading Dashboard
 
 A personal trading dashboard built with Next.js, TypeScript and PostgreSQL. It turns the trades from my Notion journal into performance statistics, interactive charts and a searchable trade history.
 
 ## Why I built this
 
-Notion worked well while my trading journal was small. As the database grew, it became slow, and updating performance charts from snapshots was tedious. I built this dashboard to automate that workflow.
+Notion was good till my database got too big and therefore as a direct consequence notion became too laggy. Also it was annoying that i had to always use snapshots for updating my diagrams. With building my own websites i was able to pull off a complete overhaul of this procedure and make everything through automation far more efficient.
 
-Notion remains the single source of truth for my trades. A sync worker imports journal entries into PostgreSQL, and the dashboard turns them into current performance metrics, interactive charts and searchable history—without manually exporting snapshots.
+I basically use notion as a single point of truth source and build a whole infrastructure which automates all releases of my analysis-diagrams through constant synchronisation.
 
 ## Architecture
 
