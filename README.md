@@ -2,23 +2,11 @@
 
 A personal trading dashboard built with Next.js, TypeScript and PostgreSQL. It turns the trades from my Notion journal into performance statistics, interactive charts and a searchable trade history.
 
-For a concise portfolio introduction, see the [LinkedIn-ready project summary](docs/linkedin-post.md).
-
 ## Why I built this
 
-I use Notion to document trades, including setups, sessions and confirmations. That works well for keeping a journal, but I wanted a clearer way to compare results without exporting everything into spreadsheets.
+Notion worked well while my trading journal was small. As the database grew, it became slow, and updating performance charts from snapshots was tedious. I built this dashboard to automate that workflow.
 
-The idea is to keep the workflow simple: record and edit trades in Notion, then use this dashboard to review them. The project follows my own journal structure rather than trying to reproduce every feature of a commercial trading platform.
-
-## Features
-
-- **Overview:** net P&L, win rate, profit factor, drawdown, equity, recorded account balance and recent trades.
-- **Trade journal:** search, filtering, sorting, pagination, trade details and CSV export.
-- **Trading calendar:** daily results, trade counts and drilldown into a selected day.
-- **Analytics:** comparisons by setup, confirmations, session, weekday, entry hour and month; recorded Win/Loss confluence outcomes; 30-minute MFE/MAE averages, scatter plot and individual measurements.
-- **Daily preparation:** a checklist and notes saved in the browser, separately for each day and account.
-- **Filters:** Forwardtesting, Backtest or all accounts; the last 30, 90 or 365 days, or all history. Additional filters cover instrument, setup, session, outcome and date range.
-- **Interface:** private login, responsive navigation and light/dark themes.
+Notion remains the single source of truth for my trades. A sync worker imports journal entries into PostgreSQL, and the dashboard turns them into current performance metrics, interactive charts and searchable history—without manually exporting snapshots.
 
 ## Architecture
 
@@ -117,86 +105,3 @@ Calendar and timing groups use the configured timezone, defaulting to `Europe/Be
 | Docker Compose, Caddy | Service deployment and HTTPS routing. |
 
 I kept the architecture small: one web application and one worker sharing a relational database. It fits a private dashboard without adding a separate API service, message queue or distributed job system.
-
-## Project structure
-
-```text
-gimm-trading-dashboard/
-├── app/
-│   ├── dashboard/page.tsx   # Session check, data loading and calculations
-│   ├── login/              # Login page and login/logout server actions
-│   └── api/health/         # Database readiness endpoint
-├── components/
-│   ├── dashboard.tsx       # Workspace, navigation and browser filters
-│   ├── dashboard/          # Journal, calendar, metrics and daily plan
-│   ├── charts/             # Chart wrappers
-│   └── ui/                 # Reusable interface components
-├── lib/
-│   ├── notion.ts           # API pagination, validation and field mapping
-│   ├── sync.ts             # Transactional synchronization
-│   ├── db.ts               # Connection pool, schema and queries
-│   ├── analytics.ts        # Performance calculations
-│   ├── journal.ts          # Journal summaries and daily grouping
-│   └── auth*.ts            # Credentials and session handling
-├── scripts/                # Worker, preview, checks and backup utilities
-├── tests/                  # Unit tests
-├── docs/                   # Authentication, preview and deployment guides
-├── proxy.ts                # Early dashboard session check
-├── compose.yaml            # Web, worker and database services
-└── compose.local.yaml      # Separate local demo
-```
-
-## Try it locally
-
-Requires Node.js 22.18 or newer and npm.
-
-```sh
-cd gimm-trading-dashboard
-npm ci
-npm run preview
-```
-
-Open the local address printed in the terminal. Demo login: username `preview`, password `gimm-local-preview-only`.
-
-The preview builds an isolated copy with synthetic trades. It does not load private environment files, contact Notion or connect to PostgreSQL. These credentials belong only to the local demo. See the [preview guide](gimm-trading-dashboard/docs/local-preview.md) for the Docker alternative and browser checks.
-
-## Connect your own journal
-
-From the application directory:
-
-1. Copy `.env.example` to `.env`. Replace the sample values with your Notion integration token, data source ID and database settings. Grant the integration read access to the journal.
-2. Check the property mapping in `lib/notion.ts` against your Notion template.
-3. Generate a password hash with `npm run auth:hash` and a session secret with `openssl rand -hex 32`. Add `AUTH_USERNAME`, `AUTH_PASSWORD_HASH` and `AUTH_SECRET` to `.env` following the [authentication guide](gimm-trading-dashboard/docs/authentication.md). Keep the hash single-quoted in the Compose environment file.
-4. Adapt the external Caddy network and domain configuration to your server. The production Compose file refers to my existing Caddy network; it does not create a reverse proxy itself.
-5. Follow the [deployment guide](gimm-trading-dashboard/docs/deployment-checklist.md) to build, start and verify the services.
-
-The real application requires configured credentials and database access. A database failure produces an unavailable-data state, rather than sample results.
-
-## Access and storage
-
-The application supports one private account, with a salted scrypt password hash and signed session cookies. Cookies are HttpOnly, SameSite=Lax, Secure in production and remain valid for up to ten years. Changing the password or session secret invalidates existing sessions. Both the request proxy and dashboard page check the session before trade data is loaded.
-
-The production Compose configuration does not publish the database or worker directly. Web database connections use read-only sessions; this is a connection setting, not a separate PostgreSQL role with restricted privileges. The worker can write to the database and receives the Notion credentials. The web container does not receive the Notion token.
-
-Daily preparation notes and the theme preference use browser local storage. Daily plans are not synchronized to Notion or shared between devices. Private environment files and generated browser artifacts are ignored by Git.
-
-## Checks
-
-Run from `gimm-trading-dashboard/`:
-
-```sh
-npm run typecheck
-npm test
-npm run build
-npm run test:smoke
-```
-
-Unit tests cover analytics, Notion mapping, query filters, journal logic, trader-skill calculations and authentication. The smoke test checks the production login flow with generated test credentials. Browser checks cover interactive views and mobile layouts; setup is documented in the [preview guide](gimm-trading-dashboard/docs/local-preview.md).
-
-## Scope and limitations
-
-This is a personal journal analysis project. It does not execute trades, connect to a broker, stream live prices or replay trades. Synchronization is periodic, and the data model follows my Notion template.
-
-The login rate limiter is held in memory for one web process. Multiple replicas would need a shared limiter. Sessions are stateless, so logout clears the current browser cookie without maintaining a server-side revocation list.
-
-There is no paid dashboard subscription dependency, but running the application still requires hosting and access to its source services.
