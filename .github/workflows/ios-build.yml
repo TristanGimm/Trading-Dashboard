@@ -24,7 +24,7 @@ jobs:
         run: ditto -c -k --sequesterRsrc --keepParent build/ios/Build/Products/Release-iphonesimulator/GIMM.app build/GIMM-Simulator.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: GIMM-iOS-Simulator
+          name: Gimm-Dashboard-iOS-Simulator
           path: build/GIMM-Simulator.zip
           if-no-files-found: error
           retention-days: 14

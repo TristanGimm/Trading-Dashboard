@@ -51,7 +51,7 @@ final class DashboardBrowser: NSObject, ObservableObject, WKNavigationDelegate, 
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard let url = action.request.url else { decisionHandler(.cancel); return }
         // Only the dashboard runs within the app; external HTTPS links open in Safari.
-        if url.scheme == "https", url.host == Self.home.host, url.user == nil, url.password == nil, url.port == nil || url.port == 443 {
+        if url.scheme == "https", url.host == Self.home.host, url.user == nil, url.password == nil, (url.port == nil || url.port == 443) {
             if action.shouldPerformDownload {
                 errorMessage = "Für den CSV-Export öffne das Dashboard bitte über das Menü in Safari."
                 decisionHandler(.cancel)

@@ -30,7 +30,7 @@ struct DashboardView: View {
                         .padding(.top, 8).allowsHitTesting(false)
                 }
             }
-            .navigationTitle("GIMM")
+            .navigationTitle("Gimm Dashboard")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

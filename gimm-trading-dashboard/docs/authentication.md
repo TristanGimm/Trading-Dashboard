@@ -22,7 +22,7 @@ Keep the **single quotes around the hash** in a Compose `.env`: the hash contain
 
 ## Session behavior
 
-- Cookies are signed, HttpOnly, SameSite=Lax and Secure in production; they expire after eight hours.
+- Cookies are signed, HttpOnly, SameSite=Lax and Secure in production; they expire after ten years. Password or session-secret rotation invalidates existing sessions.
 - Logout clears the browser cookie. Stateless sessions do not have a per-session server revocation list: a copied cookie remains valid until expiry. Rotating `AUTH_SECRET`, the username or password hash invalidates all current sessions.
 - Login allows ten attempts per 15-minute window for the entire web process, including successful logins. This intentionally bounds work for the single-user deployment. Restarting the process resets the limit; before scaling to multiple web replicas, use a shared limiter. Other clients can exhaust the shared bucket temporarily.
 - Login and logout use Next.js Server Actions with the framework's same-origin protection. Authorization is checked on the dashboard page itself, before data access, in addition to the early request guard. See the [Next.js proxy reference](https://nextjs.org/docs/app/api-reference/file-conventions/proxy). See the [Next.js authentication guide](https://nextjs.org/docs/app/guides/authentication).

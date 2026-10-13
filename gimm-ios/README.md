@@ -1,4 +1,4 @@
-# GIMM for iPhone and iPad
+# Gimm Dashboard for iPhone and iPad
 
 Native SwiftUI app shell for the existing HTTPS dashboard. The web application, PostgreSQL and Notion worker continue to run on the server. This project does not contain credentials or trading data.
 
@@ -8,16 +8,16 @@ Native SwiftUI app shell for the existing HTTPS dashboard. The web application, 
 - Native loading indicator, connection-error screen, retry, refresh and pull to refresh.
 - Back navigation, link sharing and opening the dashboard in Safari.
 - External HTTPS links, including Notion, open outside the embedded dashboard.
-- iPhone/iPad layouts, dark appearance and GIMM icon.
+- iPhone/iPad layouts, dark appearance and app icon. The app is displayed as **Gimm Dashboard** on the Home Screen and in the app.
 
-The app requires internet access. The existing eight-hour session expiry remains in force. This first version does not add offline trading data, biometrics or push notifications. CSV export should be used in Safari; browser blob downloads are not implemented in the native shell.
+The app requires internet access. The signed login session can remain valid for up to ten years; changing the dashboard password or server session secret requires signing in again. This first version does not add offline trading data, biometrics or push notifications. CSV export should be used in Safari; browser blob downloads are not implemented in the native shell.
 
 ## Build and install on your iPhone
 
 The complete Xcode app and an iOS SDK are required; Apple's standalone Command Line Tools are insufficient.
 
 1. Open `GIMM.xcodeproj` in Xcode.
-2. Under **GIMM → Signing & Capabilities**, select your Apple team. Use a bundle identifier available to that team if necessary.
+2. Under **GIMM → Signing & Capabilities**, select your Apple team. The Home Screen name is **Gimm Dashboard**. Use a bundle identifier available to that team if necessary.
 3. Connect your iPhone, enable Developer Mode when requested, select it as the run destination and run the app.
 4. Sign in with the existing dashboard credentials in the app.
 
@@ -25,7 +25,7 @@ A free Personal Team can be used for local device testing, but its provisioning 
 
 ## Git automation
 
-`.github/workflows/ios-build.yml` builds the iOS Simulator version on relevant pushes to `main`, PRs and manual dispatch. It uploads `GIMM-iOS-Simulator` as a workflow artifact. This archive is **for the Simulator only and cannot be installed on a physical iPhone**.
+`.github/workflows/ios-build.yml` builds the iOS Simulator version on relevant pushes to `main`, PRs and manual dispatch. It uploads `Gimm-Dashboard-iOS-Simulator` as a workflow artifact. This archive is **for the Simulator only and cannot be installed on a physical iPhone**.
 
 Install the simulator artifact on a Mac with Xcode using:
 

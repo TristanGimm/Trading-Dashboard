@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 
-export const SESSION_SECONDS = 8 * 60 * 60;
+// Long-lived personal-device login. Credential or secret rotation still revokes sessions.
+export const SESSION_SECONDS = 10 * 365 * 24 * 60 * 60;
 export const SESSION_COOKIE = 'gimm_session';
 export type AuthConfig = { username: string; passwordHash: string; secret: string };
 const hashPattern = /^scrypt\$([a-f0-9]{32})\$([a-f0-9]{128})$/;

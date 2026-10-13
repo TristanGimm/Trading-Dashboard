@@ -2,6 +2,8 @@
 
 A personal trading dashboard built with Next.js, TypeScript and PostgreSQL. It turns the trades from my Notion journal into performance statistics, interactive charts and a searchable trade history.
 
+For a concise portfolio introduction, see the [LinkedIn-ready project summary](docs/linkedin-post.md).
+
 ## Why I built this
 
 I use Notion to document trades, including setups, sessions and confirmations. That works well for keeping a journal, but I wanted a clearer way to compare results without exporting everything into spreadsheets.
@@ -172,7 +174,7 @@ The real application requires configured credentials and database access. A data
 
 ## Access and storage
 
-The application supports one private account, with a salted scrypt password hash and signed session cookies. Cookies are HttpOnly, SameSite=Lax, Secure in production and expire after eight hours. Both the request proxy and dashboard page check the session before trade data is loaded.
+The application supports one private account, with a salted scrypt password hash and signed session cookies. Cookies are HttpOnly, SameSite=Lax, Secure in production and remain valid for up to ten years. Changing the password or session secret invalidates existing sessions. Both the request proxy and dashboard page check the session before trade data is loaded.
 
 The production Compose configuration does not publish the database or worker directly. Web database connections use read-only sessions; this is a connection setting, not a separate PostgreSQL role with restricted privileges. The worker can write to the database and receives the Notion credentials. The web container does not receive the Notion token.
 
