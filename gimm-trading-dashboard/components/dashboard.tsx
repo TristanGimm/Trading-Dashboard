@@ -15,7 +15,6 @@ import { DailyPanel, EquityPanel, OutcomePanel, SetupPanel, TimePanel } from '@/
 import { TradingCalendar } from '@/components/dashboard/calendar';
 import { TradeJournal, TradeTable } from '@/components/dashboard/journal';
 import { TradeDetail } from '@/components/dashboard/trade-detail';
-import { DayPlan } from '@/components/dashboard/day-plan';
 import { TraderSkill, PerformanceExtras } from '@/components/dashboard/trader-skill';
 import { ExecutionAnalytics } from '@/components/dashboard/execution';
 import { Metrics } from '@/components/dashboard/metrics';
@@ -111,7 +110,6 @@ export function Dashboard({ data, loadError }: { data: DashboardPayload; loadErr
           {view !== 'overview' && <Metrics performance={p}/>}
           {view === 'overview' && <>
             <div className="command-kpis"><Metrics performance={p} variant="primary"/><PerformanceExtras performance={p} trades={trades} days={days}/></div>
-            <DayPlan today={data.today} account={data.selectedAccount}/>
             <div className="command-grid"><div className="command-charts"><EquityPanel performance={p} balanceAvailable={data.selectedAccount !== 'all'}/><TraderSkill performance={p} days={days}/></div><div className="command-calendar"><TradingCalendar days={days} today={data.today} onTrade={setSelectedTrade}/></div></div>
             <Metrics performance={p} variant="secondary"/>
             <div className="overview-grid"><DailyPanel days={closedDays}/><OutcomePanel performance={p}/></div>

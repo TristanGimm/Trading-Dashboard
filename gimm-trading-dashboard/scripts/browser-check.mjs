@@ -78,15 +78,7 @@ try {
   assert.equal(await page.getByText('NINJA RANK', { exact: true }).count(), 0);
   await page.getByText('How your score works', { exact: true }).click();
   await page.getByText('How your score works', { exact: true }).click();
-  await page.getByRole('button', { name: 'Prepare session', exact: true }).click();
-  await page.getByLabel('Review today’s market context', { exact: true }).check();
-  await page.getByLabel('Session focus', { exact: true }).fill('Wait for my A+ setup');
-  await page.reload();
-  await page.getByRole('button', { name: 'Prepare session', exact: true }).click();
-  assert.equal(await page.getByLabel('Review today’s market context', { exact: true }).isChecked(), true);
-  assert.equal(await page.getByLabel('Session focus', { exact: true }).inputValue(), 'Wait for my A+ setup');
-  await page.getByRole('button', { name: 'Close plan', exact: true }).click();
-  check('0–100 skill score and daily preparation saved across reload');
+  check('0–100 skill score, radar and score explanation');
   await page.getByRole('button', { name: 'Filters', exact: true }).click();
   await page.getByRole('combobox', { name: 'Dashboard outcome', exact: true }).selectOption('loss');
   assert.ok((await page.locator('.metric-value').first().textContent()).startsWith('-'));
