@@ -12,7 +12,7 @@ import { importTradesFromCsv, parseCsv } from './import-notion.ts';
 /**
  * Import a Notion "Markdown & CSV" export, including the chart screenshots.
  *
- *   npx tsx scripts/import-notion-export.ts <export.zip|export-folder> [--dry-run] [--replace] [--images-only]
+ *   npx tsx scripts/import-notion-export.ts <export.zip|export-folder> [--dry-run] [--replace|--merge] [--images-only]
  *
  * Pass the ZIP that Notion downloads, not an unzipped folder that only contains
  * the CSV: the image files live in one sub-folder per trade. The CSV's Analysis
@@ -126,13 +126,15 @@ async function unpack(source: string): Promise<{ root: string; temporary: boolea
 
 async function main() {
   const source = process.argv[2];
-  if (!source) throw new Error('Usage: import-notion-export.ts <export.zip|folder> [--dry-run] [--replace] [--images-only]');
+  if (!source) throw new Error('Usage: import-notion-export.ts <export.zip|folder> [--dry-run] [--replace|--merge] [--images-only]');
   const dryRun = process.argv.includes('--dry-run');
   const replace = process.argv.includes('--replace');
   const imagesOnly = process.argv.includes('--images-only');
+  const merge = process.argv.includes('--merge');
   if (replace) {
     console.warn('--replace deletes every trade first, including trades created in the app that are not in this export.');
   }
+  if (merge && replace) throw new Error('Use either --replace or --merge, not both.');
 
   const { root, temporary } = await unpack(source);
   try {
@@ -145,7 +147,7 @@ async function main() {
       if (dryRun) console.log('Dry run: trade rows are not written.');
       // Same process on purpose: a child `node --experimental-strip-types`
       // cannot resolve the application's extensionless imports.
-      await importTradesFromCsv(csvPath, { dryRun, replace });
+      await importTradesFromCsv(csvPath, { dryRun, replace, merge });
     }
 
     await ensureSchema();

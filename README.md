@@ -222,6 +222,8 @@ cd master-trading-dashboard
 
 The script imports on the host (only there is the ZIP reachable), writes the images to a staging folder, and copies them into the running `web` container, because a Docker Desktop volume is not a host directory. Re-running is idempotent: an image already attached is skipped by filename.
 
+`--merge` updates trades that already exist (matched on the trade id) instead of inserting duplicates, so a running deployment keeps its notes pages and screenshots while the recorded columns move to the export. `--replace` is the destructive alternative.
+
 Without Docker, the importer is the same script:
 
 ```sh

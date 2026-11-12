@@ -196,8 +196,8 @@ export type ImportSummary = {
  * extensionless imports, and `tsx` is already the runner for both scripts.
  * The caller owns the connection pool; this function never ends it.
  */
-export async function importTradesFromCsv(path: string, options: { dryRun?: boolean; replace?: boolean } = {}): Promise<{ trades: number; summary: ImportSummary }> {
-  const { dryRun = false, replace = false } = options;
+export async function importTradesFromCsv(path: string, options: { dryRun?: boolean; replace?: boolean; merge?: boolean } = {}): Promise<{ trades: number; summary: ImportSummary }> {
+  const { dryRun = false, replace = false, merge = false } = options;
   const timeZone = process.env.DASHBOARD_TIMEZONE || 'Europe/Berlin';
 
   const rows = parseCsv(await readFile(path, 'utf8'));
@@ -275,7 +275,33 @@ export async function importTradesFromCsv(path: string, options: { dryRun?: bool
   try {
     await client.query('BEGIN');
     if (replace) await client.query('DELETE FROM trades');
+    let updated = 0;
     for (const trade of trades) {
+      const values = [
+        trade.id, trade.tradeId, trade.tradeNumber, trade.account, trade.dateTime, trade.day, trade.pair,
+        trade.position, trade.netEur, trade.accountBalance, trade.rMultiple, trade.setup, trade.tfType,
+        trade.algorithm, trade.sessionTime, trade.liquiditySweep, trade.dxy, trade.delta, trade.fractalShift,
+        trade.recordedOutcome, trade.mfe30m, trade.mae30m, trade.setupQuality, trade.marketCondition,
+        trade.entryTf, trade.tfAlign, trade.orderType, trade.lotSize, trade.pnlPercent, trade.learning,
+        trade.outcomeTag, trade.timeRecorded, trade.analysisNote, trade.exitTime,
+      ];
+      if (merge) {
+        // Keep the existing row (and its notes page and screenshots) and bring
+        // the recorded columns up to the export. Only a missing trade is
+        // inserted, with a fresh id.
+        const result = await client.query(
+          `UPDATE trades SET
+             trade_number=$2,account=$3,date_time=$4,day_label=$5,pair=$6,position=$7,net_eur=$8,
+             account_balance=$9,r_multiple=$10,setup=$11,tf_type=$12,algorithm=$13,session_time=$14,
+             liquidity_sweep=$15,dxy=$16,delta=$17,fractal_shift=$18,recorded_outcome=$19,mfe_30m=$20,
+             mae_30m=$21,setup_quality=$22,market_condition=$23,entry_tf=$24,tf_align=$25,order_type=$26,
+             lot_size=$27,pnl_percent=$28,learning=$29,outcome_tag=$30,time_recorded=$31,
+             analysis_note=COALESCE(analysis_note, $32),exit_time=$33,updated_at=NOW()
+           WHERE trade_id=$1`,
+          values.slice(1),
+        );
+        if ((result.rowCount || 0) > 0) { updated++; continue; }
+      }
       await client.query(
         `INSERT INTO trades (
            id,trade_id,trade_number,account,date_time,day_label,pair,position,net_eur,account_balance,r_multiple,
@@ -284,16 +310,10 @@ export async function importTradesFromCsv(path: string, options: { dryRun?: bool
            lot_size,pnl_percent,learning,outcome_tag,time_recorded,analysis_note,exit_time,last_seen_run,updated_at
          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,NOW(),$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,'notion-import',NOW())
          ON CONFLICT (id) DO NOTHING`,
-        [
-          trade.id, trade.tradeId, trade.tradeNumber, trade.account, trade.dateTime, trade.day, trade.pair,
-          trade.position, trade.netEur, trade.accountBalance, trade.rMultiple, trade.setup, trade.tfType,
-          trade.algorithm, trade.sessionTime, trade.liquiditySweep, trade.dxy, trade.delta, trade.fractalShift,
-          trade.recordedOutcome, trade.mfe30m, trade.mae30m, trade.setupQuality, trade.marketCondition,
-          trade.entryTf, trade.tfAlign, trade.orderType, trade.lotSize, trade.pnlPercent, trade.learning,
-          trade.outcomeTag, trade.timeRecorded, trade.analysisNote, trade.exitTime,
-        ],
+        values,
       );
     }
+    if (merge) console.log(`Updated ${updated} existing trade(s).`);
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');
@@ -307,10 +327,11 @@ export async function importTradesFromCsv(path: string, options: { dryRun?: bool
 
 async function main() {
   const path = process.argv[2];
-  if (!path) throw new Error('Usage: import-notion.ts <file.csv> [--dry-run] [--replace]');
+  if (!path) throw new Error('Usage: import-notion.ts <file.csv> [--dry-run] [--replace|--merge]');
   await importTradesFromCsv(path, {
     dryRun: process.argv.includes('--dry-run'),
     replace: process.argv.includes('--replace'),
+    merge: process.argv.includes('--merge'),
   });
   await getPool().end();
 }
