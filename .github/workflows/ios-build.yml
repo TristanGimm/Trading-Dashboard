@@ -2,9 +2,9 @@ name: iOS build
 on:
   push:
     branches: [main]
-    paths: ['gimm-ios/**', '.github/workflows/ios-build.yml']
+    paths: ['app-ios/**', '.github/workflows/ios-build.yml']
   pull_request:
-    paths: ['gimm-ios/**', '.github/workflows/ios-build.yml']
+    paths: ['app-ios/**', '.github/workflows/ios-build.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build iPhone simulator app
         run: >-
-          xcodebuild -project gimm-ios/GIMM.xcodeproj -scheme GIMM
+          xcodebuild -project app-ios/Mobile.xcodeproj -scheme GIMM
           -configuration Release -sdk iphonesimulator
           -destination 'generic/platform=iOS Simulator'
           -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO build

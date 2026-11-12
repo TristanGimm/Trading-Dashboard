@@ -1,0 +1,53 @@
+# Local test stack with a real PostgreSQL database and a writable uploads volume.
+# Start it with ./scripts/dev-stack.sh — do not use this file for production.
+name: gimm-dev
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DEV_DB_NAME:-trading}
+      POSTGRES_USER: ${DEV_DB_USER:-trading}
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:?run ./scripts/dev-stack.sh}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - dev_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  web:
+    build:
+      context: .
+      target: web
+    restart: unless-stopped
+    env_file: .env.dev
+    environment:
+      # Docker sets HOSTNAME to the container id; Next.js would bind to it instead of all interfaces.
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      APP_URL: http://127.0.0.1:3000
+      MAIL_DIR: /app/mail
+      MAIL_DEBUG: "true"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - dev_uploads:/app/uploads
+      - dev_mail:/app/mail
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+
+volumes:
+  dev_postgres:
+  dev_uploads:
+  dev_mail:

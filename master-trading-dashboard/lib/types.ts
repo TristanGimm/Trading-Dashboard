@@ -1,0 +1,67 @@
+import type { WorkspacePageSummary } from './workspace-types.ts';
+
+export type Trade = {
+  id: string;
+  tradeId: string;
+  tradeNumber: number | null;
+  account: string[];
+  dateTime: string | null;
+  day: string | null;
+  pair: string | null;
+  position: string | null;
+  netEur: number | null;
+  recordedOutcome?: Outcome | null;
+  mfe30m?: number | null;
+  mae30m?: number | null;
+  accountBalance: number | null;
+  rMultiple: number | null;
+  setup: string[];
+  tfType: string[];
+  algorithm: string[];
+  sessionTime: string[];
+  liquiditySweep: boolean;
+  dxy: boolean;
+  delta: boolean;
+  fractalShift: boolean;
+  lastEditedTime: string | null;
+  setupQuality?: string | null;
+  marketCondition?: string[];
+  entryTf?: string[];
+  tfAlign?: string[];
+  orderType?: string | null;
+  lotSize?: number | null;
+  pnlPercent?: number | null;
+  learning?: string | null;
+  outcomeTag?: string | null;
+  timeRecorded?: boolean;
+  analysisNote?: string | null;
+  exitTime?: string | null;
+  /** Chart screenshots attached to the trade notes page, oldest first. */
+  screenshots?: { id: string; caption: string | null }[];
+};
+export type Outcome = 'win' | 'loss' | 'breakeven';
+export type Comparison = {label: string; group: 'Setup'|'Confluence'; count:number; wins:number; avgPnl:number; totalPnl:number; winRate:number};
+export type TimePerformance = {label:string;count:number;wins:number;winRate:number;avgPnl:number};
+export type BalancePoint = {time: string; value: number};
+export type Performance = {
+  total: number; closed: number; wins: number; losses: number; breakeven: number;
+  winRate: number; netPnl:number; avgPnl:number; grossProfit:number; grossLoss:number;
+  profitFactor:number|null; avgR:number|null; bestTrade:number|null; worstTrade:number|null;
+  maxDrawdown:number; maxDrawdownPct:number|null;
+  cumulative:BalancePoint[]; balance:BalancePoint[];
+  comparisons:Comparison[]; sessions:TimePerformance[]; weekdays:TimePerformance[]; hours:TimePerformance[];
+  monthly:TimePerformance[];
+};
+export type DashboardView = 'overview' | 'journal' | 'calendar' | 'analytics';
+export type DashboardPayload = {
+  view: DashboardView;
+  demo: boolean;
+  today: string;
+  generatedAt: string;
+  timeZone: string;
+  performance: Performance;
+  trades: Trade[];
+  lastUpdated: string | null;
+  selectedAccount: string;
+  selectedPeriod: string;
+};

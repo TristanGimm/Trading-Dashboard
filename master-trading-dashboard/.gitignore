@@ -1,0 +1,17 @@
+node_modules
+.next
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+.DS_Store
+coverage
+
+artifacts/
+uploads/
+.notion-uploads/
+.env.dev
+.dev-credentials.txt
+.account-credentials.txt
+.mail/
