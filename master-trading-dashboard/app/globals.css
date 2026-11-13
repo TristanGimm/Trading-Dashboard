@@ -3170,3 +3170,28 @@ textarea.fact-input { resize: vertical; min-height: 70px; }
 .pnl-ring.empty { display: inline-grid; place-items: center; color: var(--muted); font-size: 11px; }
 .trade-table .pnl-ring-label { font-size: 8px; font-weight: 500; }
 .dialog-result-row .pnl-ring-label { font-size: 15px; }
+
+/* ---------------------------------------------------------------------------
+   Journal table readability: the ledger is scanned at a glance, so every
+   cell, tag and inline control is set one size up from the original scale.
+   Values are deliberately in px (not em) to keep the rhythm predictable.
+   --------------------------------------------------------------------------- */
+.trade-table th { font-size: 10.5px; padding: 13px 14px; letter-spacing: .55px; }
+.trade-table td { font-size: 13px; padding: 13px 14px; }
+.trade-table td.cell-tight { padding-inline: 7px; }
+.trade-table .trade-id,
+.trade-table .trade-number { font-size: 12.5px; }
+.trade-table .pair-cell { gap: 9px; }
+.trade-table .pair-icon { width: 30px; height: 30px; font-size: 11.5px; }
+.trade-table .trade-tag { font-size: 10.5px; padding: 3px 7px; gap: 5px; }
+.trade-table .data-tag { font-size: 10.5px; padding: 3px 7px; }
+.trade-table .quality-tag,
+.trade-table .quality-tag.quality-sm { font-size: 10px; padding: 3px 7px; }
+.trade-table .tag-stack { gap: 4px; max-width: 340px; }
+.trade-table .confluence-cell { gap: 4px; }
+.trade-table .confluence-box { min-width: 31px; height: 25px; padding: 0 5px; font-size: 9.5px; }
+.trade-table .chart-cell { width: 52px; height: 33px; }
+.trade-table .chart-count { font-size: 8.5px; min-width: 14px; line-height: 14px; }
+.trade-table .pnl-ring-label { font-size: 10px; }
+.trade-table .learning-cell { line-height: 1.55; }
+.table-footer { font-size: 11.5px; }

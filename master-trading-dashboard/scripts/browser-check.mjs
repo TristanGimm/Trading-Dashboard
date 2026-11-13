@@ -39,7 +39,11 @@ try {
     return page.screenshot({ path: resolve(artifacts, name + '.png'), fullPage: !name.includes('trade-detail') });
   };
   const chartsReady = () => page.waitForFunction(() => document.querySelectorAll('.chart-skeleton').length === 0, undefined, { timeout: 15000 });
+  // A viewport change settles on the next layout, so measure after two frames
+  // instead of catching the page mid-resize.
+  const settled = () => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const noOverflow = async width => {
+    await settled();
     const dimensions = await page.evaluate(() => {
       const viewport = window.innerWidth;
       // Name the offender so a failure is actionable instead of just a number.
@@ -49,7 +53,9 @@ try {
           right: Math.round(element.getBoundingClientRect().right),
         }))
         .filter(item => item.right > viewport + 1)
-        .slice(0, 4);
+        // Widest first: the first offender is the one that sets the page width.
+        .sort((a, b) => b.right - a.right)
+        .slice(0, 6);
       return { content: document.documentElement.scrollWidth, viewport, culprits };
     });
     assert.ok(dimensions.content <= dimensions.viewport + 1, `Page overflows at ${width}px: ${JSON.stringify(dimensions)}`);
@@ -62,7 +68,7 @@ try {
   await page.getByLabel('Password', { exact: true }).fill(connection.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL(/\/dashboard/);
-  await page.getByRole('heading', { name: 'Trading Dashboard' }).waitFor();
+  await page.getByRole('heading', { name: 'Overview', exact: true }).waitFor();
   await chartsReady();
   assert.ok(await page.locator('canvas').count() >= 4, 'Expected rendered charts');
   await noOverflow(1440);
@@ -131,7 +137,7 @@ try {
     await page.waitForTimeout(300);
   };
   await navigate('Trading Journal');
-  await page.getByRole('heading', { name: 'Every trade. Every lesson.' }).waitFor();
+  await page.getByRole('heading', { name: 'Trading Journal', exact: true }).waitFor();
   await page.getByRole('searchbox', { name: 'Search trades' }).fill('XAU/USD');
   assert.ok(await page.locator('tbody tr').count() > 0);
   for (const instrument of await page.locator('tbody .pair-cell').allTextContents()) assert.ok(instrument.includes('XAU/USD'));
@@ -157,7 +163,7 @@ try {
   await screenshot('journal-desktop');
   check('journal search, combined filters, empty state, full CSV export, pagination and accessible trade dialog');
 
-  await navigate('Trading calendar');
+  await navigate('Trading Calendar');
   await page.locator('.calendar-cell.has-trades').first().click();
   await page.locator('.calendar-day-detail').waitFor();
   await page.locator('.day-trade').first().click();
@@ -172,7 +178,7 @@ try {
   check('calendar month navigation, daily breakdown and linked trade details');
 
   await navigate('Analytics');
-  await page.getByRole('heading', { name: 'Understand your edge.' }).waitFor();
+  await page.getByRole('heading', { name: 'Analytics', exact: true }).waitFor();
   await chartsReady();
   await page.getByRole('heading', { name: 'Recorded confluence outcomes' }).waitFor();
   await page.getByRole('heading', { name: 'MFE & MAE · 30 minutes' }).waitFor();
@@ -196,15 +202,22 @@ try {
 
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
+    // The shell switches to its mobile layout in CSS; wait for that switch so
+    // the assertions below test the phone layout and not a resize in flight.
+    await page.waitForFunction(() => {
+      const sidebar = document.querySelector('.app-sidebar');
+      return !sidebar || getComputedStyle(sidebar).display === 'none';
+    });
+    await settled();
     await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Analytics', exact: true }).click();
     await page.getByRole('heading', { name: 'MFE & MAE · 30 minutes' }).waitFor();
     await chartsReady(); await noOverflow(width);
     await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Overview', exact: true }).click();
-    await page.getByRole('heading', { name: 'Trading Dashboard' }).waitFor();
+    await page.getByRole('heading', { name: 'Overview', exact: true }).waitFor();
     await chartsReady(); await noOverflow(width);
     if (width === 390) await screenshot('overview-mobile');
     await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Journal', exact: true }).click();
-    await page.getByRole('heading', { name: 'Every trade. Every lesson.' }).waitFor();
+    await page.getByRole('heading', { name: 'Trading Journal', exact: true }).waitFor();
     await noOverflow(width);
     if (width === 390) await screenshot('journal-mobile');
   }
@@ -216,7 +229,7 @@ try {
   await page.waitForURL(/period=30d/);
   assert.ok(page.url().includes('/journal'), 'period change must stay on /journal');
   await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Overview', exact: true }).click();
-  await page.getByRole('heading', { name: 'Trading Dashboard' }).waitFor();
+  await page.getByRole('heading', { name: 'Overview', exact: true }).waitFor();
   await page.getByRole('combobox', { name: 'Account filter' }).selectOption('all');
   await page.waitForURL(/account=all/);
   await page.waitForFunction(() => [...document.querySelectorAll('button')].some(button => button.textContent === 'Balance' && button.disabled));

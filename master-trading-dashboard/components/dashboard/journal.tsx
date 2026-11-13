@@ -89,7 +89,7 @@ const columns: Column[] = [
   { id: 'tfAlign', label: 'TF Align', default: true, render: trade => timeframeList(trade.tfAlign) },
   { id: 'session', label: 'Session', default: true, render: trade => trade.sessionTime.length ? <span className="tag-stack">{trade.sessionTime.map(value => <SessionTag key={value} value={value}/>)}</span> : dash },
   { id: 'outcome', label: 'Outcome', default: true, render: trade => { const value = outcomeOf(trade); return <span className={`trade-tag outcome-${value}`}>{trade.outcomeTag || value}</span>; } },
-  { id: 'pnlPercent', label: 'PnL %', default: true, render: trade => <PnlRing percent={trade.pnlPercent}/> },
+  { id: 'pnlPercent', label: 'PnL %', default: true, render: trade => <PnlRing percent={trade.pnlPercent} size={40}/> },
   { id: 'net', label: 'Net P&L', default: true, align: 'right', render: trade => trade.netEur === null ? (trade.recordedOutcome ? <span className="muted">{trade.outcomeTag || trade.recordedOutcome} · no amount</span> : dash) : <span className={trade.netEur < 0 ? 'negative' : trade.netEur ? 'positive' : ''}>{money(trade.netEur)}</span> },
   { id: 'r', label: 'R', default: true, align: 'right', render: trade => trade.rMultiple === null ? dash : `${number(trade.rMultiple)}R` },
   { id: 'lot', label: 'Lots', default: true, align: 'right', render: trade => trade.lotSize === null || trade.lotSize === undefined ? dash : number(trade.lotSize) },
