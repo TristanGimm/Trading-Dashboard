@@ -21,6 +21,7 @@ import {
   SETUP_OPTIONS,
   TF_ALIGN_OPTIONS,
   TF_TYPE_OPTIONS,
+  withCurrentValue,
 } from '@/lib/trade-options';
 import { ChoiceField } from '@/components/journal/choice-field';
 import { ScreenshotField, imagesFromClipboard, screenshotValidationError, type PendingScreenshot } from '@/components/journal/screenshot-field';
@@ -130,6 +131,11 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm(previous => ({ ...previous, [key]: value }));
 
   const pnlPercent = pnlPercentOf(previewNumber(form.netEur), previewNumber(form.accountBalance));
+  const instrumentOptions = withCurrentValue(INSTRUMENT_OPTIONS, form.pair);
+  const positionOptions = withCurrentValue(DIRECTION_OPTIONS, form.position);
+  const qualityOptions = withCurrentValue([...QUALITY_TIERS], form.setupQuality);
+  const orderTypeOptions = withCurrentValue(ORDER_TYPE_OPTIONS, form.orderType);
+  const outcomeTagOptions = withCurrentValue(OUTCOME_TAG_OPTIONS, form.outcomeTag);
 
   const addScreenshots = (files: File[]) => {
     if (pending) return;
@@ -309,8 +315,8 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
         <label className="field"><span>Entry time</span><input className="form-input" type="datetime-local" value={form.dateTime} onChange={event => update('dateTime', event.target.value)}/></label>
         <label className="field"><span>Exit time</span><input className="form-input" type="datetime-local" value={form.exitTime} onChange={event => update('exitTime', event.target.value)}/><small>Optional. Leave empty when not recorded.</small></label>
         <label className="field"><span>Trade number</span><input className="form-input" inputMode="numeric" value={form.tradeNumber} placeholder="Auto" onChange={event => update('tradeNumber', event.target.value)}/><small>Leave empty to use the next number.</small></label>
-        <label className="field"><span>Instrument</span><select className="form-input" value={form.pair} onChange={event => update('pair', event.target.value)}>{INSTRUMENT_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-        <label className="field"><span>Direction</span><select className="form-input" value={form.position} onChange={event => update('position', event.target.value)}><option value="">Choose…</option>{DIRECTION_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+        <label className="field"><span>Instrument</span><select className="form-input" value={form.pair} onChange={event => update('pair', event.target.value)}>{instrumentOptions.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+        <label className="field"><span>Direction</span><select className="form-input" value={form.position} onChange={event => update('position', event.target.value)}><option value="">Choose…</option>{positionOptions.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
         <ChoiceField className="field-wide" label="Account" options={ACCOUNT_OPTIONS} values={form.account} onChange={values => update('account', values)} hint="Choose more than one if the trade belongs to several accounts."/>
       </div>
     </section>
@@ -325,7 +331,7 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
         <label className="field"><span>MFE (30 min)</span><input className="form-input" inputMode="decimal" value={form.mfe30m} placeholder="Maximum favorable" onChange={event => update('mfe30m', event.target.value)}/></label>
         <label className="field"><span>MAE (30 min)</span><input className="form-input" inputMode="decimal" value={form.mae30m} placeholder="Maximum adverse" onChange={event => update('mae30m', event.target.value)}/></label>
         <label className="field"><span>Recorded outcome</span><select className="form-input" value={form.recordedOutcome} onChange={event => update('recordedOutcome', event.target.value)}><option value="">Derive from Net P&amp;L</option><option value="win">Win</option><option value="loss">Loss</option><option value="breakeven">Break-even</option></select></label>
-        <label className="field"><span>Outcome tag</span><select className="form-input" value={form.outcomeTag} onChange={event => update('outcomeTag', event.target.value)}><option value="">None</option>{OUTCOME_TAG_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</select><small>The granular label, kept alongside the net result.</small></label>
+        <label className="field"><span>Outcome tag</span><select className="form-input" value={form.outcomeTag} onChange={event => update('outcomeTag', event.target.value)}><option value="">None</option>{outcomeTagOptions.map(value => <option key={value} value={value}>{value}</option>)}</select><small>The granular label, kept alongside the net result.</small></label>
       </div>
     </section>
     <section className="form-section">
@@ -338,8 +344,8 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
         <ChoiceField className="field-wide" label="TF align" options={TF_ALIGN_OPTIONS} values={form.tfAlign} onChange={values => update('tfAlign', values)}/>
         <ChoiceField className="field-wide" label="TF type" options={TF_TYPE_OPTIONS} values={form.tfType} onChange={values => update('tfType', values)} hint="The entry timeframe and its setup type."/>
         <ChoiceField className="field-wide" label="Algorithm" options={ALGORITHM_OPTIONS} values={form.algorithm} onChange={values => update('algorithm', values)}/>
-        <label className="field"><span>Setup quality</span><select className="form-input" value={form.setupQuality} onChange={event => update('setupQuality', event.target.value)}><option value="">Unrated</option>{QUALITY_TIERS.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-        <label className="field"><span>Order type</span><select className="form-input" value={form.orderType} onChange={event => update('orderType', event.target.value)}><option value="">Unrecorded</option>{ORDER_TYPE_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+        <label className="field"><span>Setup quality</span><select className="form-input" value={form.setupQuality} onChange={event => update('setupQuality', event.target.value)}><option value="">Unrated</option>{qualityOptions.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+        <label className="field"><span>Order type</span><select className="form-input" value={form.orderType} onChange={event => update('orderType', event.target.value)}><option value="">Unrecorded</option>{orderTypeOptions.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
       </div>
       <div className="checkbox-row">
         {([['liquiditySweep', 'Liquidity sweep'], ['dxy', 'DXY confirmation'], ['delta', 'Delta'], ['fractalShift', 'Fractal shift']] as const).map(([key, label]) => <label key={key} className="checkbox-field"><input type="checkbox" checked={form[key]} onChange={event => update(key, event.target.checked)}/><span>{label}</span></label>)}

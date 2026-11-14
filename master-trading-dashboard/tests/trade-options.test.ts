@@ -13,6 +13,7 @@ import {
   SETUP_OPTIONS,
   TF_ALIGN_OPTIONS,
   TF_TYPE_OPTIONS,
+  withCurrentValue,
   withStored,
 } from '../lib/trade-options.ts';
 
@@ -64,4 +65,7 @@ test('pickable vocabularies are unique, non-empty and cover the recorded journal
 test('stored values outside the vocabulary stay editable', () => {
   assert.deepEqual(withStored(['A', 'B'], ['B']), ['A', 'B']);
   assert.deepEqual(withStored(['A', 'B'], ['Legacy']), ['A', 'B', 'Legacy']);
+  assert.deepEqual(withCurrentValue(['A', 'B'], 'B'), ['A', 'B']);
+  assert.deepEqual(withCurrentValue(['A', 'B'], 'Legacy'), ['A', 'B', 'Legacy']);
+  assert.deepEqual(withCurrentValue(['A', 'B'], ''), ['A', 'B']);
 });

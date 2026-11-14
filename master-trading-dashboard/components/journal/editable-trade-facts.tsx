@@ -317,6 +317,14 @@ export function EditableTradeFacts({ trade: initial, timeZone, variant = 'panel'
     <dl className={cn('facts-list', 'editable-facts', variant === 'dialog' && 'detail-grid', variant === 'dialog' && 'editable-facts-dialog')}>
       {fields.map(field => {
         const isEditing = editing === field.key;
+        // A select must be able to display a legacy value that predates the
+        // shared vocabulary, otherwise the first option would silently win.
+        const currentValue = field.value(trade, timeZone);
+        const selectOptions = field.options
+          ? (currentValue && !field.options.some(option => option.value === currentValue)
+              ? [...field.options, { value: currentValue, label: currentValue }]
+              : field.options)
+          : undefined;
         return <div key={field.key} className={cn('fact-row', field.kind === 'textarea' && 'fact-row-wide', isEditing && 'is-editing')}>
           <dt>{field.label}</dt>
           <dd>
@@ -334,7 +342,7 @@ export function EditableTradeFacts({ trade: initial, timeZone, variant = 'panel'
                       onChange={event => { setDraft(event.target.value); void save(field, event.target.value); }}
                       onKeyDown={event => { if (event.key === 'Escape') cancel(); }}
                     >
-                      {field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                      {selectOptions?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
                     </select>
                   : field.kind === 'textarea'
                     ? <textarea

@@ -27,6 +27,7 @@ export const INSTRUMENT_OPTIONS: string[] = [
   'USD/CHF',
   'USD/CAD',
   'NAS100',
+  'NQ',
   'US30',
   'SPX500',
   'GER40',
@@ -96,4 +97,9 @@ export const TF_TYPE_OPTIONS: string[] = ['5s', '1m', '5m', '15m', '30m', '1hr',
 /** Merge a stored value into a fixed option list so old rows stay editable. */
 export function withStored(options: string[], values: string[]): string[] {
   return [...options, ...values.filter(value => !options.includes(value))];
+}
+
+/** Include a stored single value in a select so an import is never hidden. */
+export function withCurrentValue(options: string[], current: string | null | undefined): string[] {
+  return current && !options.includes(current) ? [...options, current] : options;
 }
