@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowRight, Check, Loader2, X } from 'lucide-react';
 import type { Trade } from '@/lib/types';
-import { money } from '@/lib/format';
+import { money, pnlPercentLabel, pnlPercentOf } from '@/lib/format';
 import { QualityBadge } from '@/components/quality-badge';
 import { PnlRing } from '@/components/journal/marks';
 import { AlgorithmTag, ConditionTag, SessionTag, SetupTag, TimeframeTag } from '@/components/journal/tags';
@@ -23,7 +23,6 @@ type Draft = {
   lotSize: string;
   rMultiple: string;
   netEur: string;
-  pnlPercent: string;
   setupQuality: string;
 };
 
@@ -45,7 +44,6 @@ function draftOf(trade: Trade): Draft {
     lotSize: trade.lotSize === null || trade.lotSize === undefined ? '' : String(trade.lotSize),
     rMultiple: trade.rMultiple === null ? '' : String(trade.rMultiple),
     netEur: trade.netEur === null ? '' : String(trade.netEur),
-    pnlPercent: trade.pnlPercent === null || trade.pnlPercent === undefined ? '' : String(trade.pnlPercent),
     setupQuality: trade.setupQuality ?? '',
   };
 }
@@ -120,7 +118,6 @@ export function TradeDetail({ trade, timeZone, demo, onClose }: { trade: Trade |
           lotSize: toNumber(draft.lotSize),
           rMultiple: toNumber(draft.rMultiple),
           netEur: toNumber(draft.netEur),
-          pnlPercent: toNumber(draft.pnlPercent),
           setupQuality: draft.setupQuality || null,
         }),
       });
@@ -138,6 +135,7 @@ export function TradeDetail({ trade, timeZone, demo, onClose }: { trade: Trade |
   };
 
   const view = live && live.id === trade.id ? live : trade;
+  const draftPnlPercent = pnlPercentOf(draft ? toNumber(draft.netEur) : view.netEur, view.accountBalance);
   const confluences = [view.liquiditySweep && 'Liquidity sweep', view.dxy && 'DXY confirmation', view.delta && 'Delta', view.fractalShift && 'Fractal shift', ...view.tfType].filter((value): value is string => Boolean(value));
 
   return <dialog ref={dialog} className="detail-dialog detail-dialog-editable" aria-labelledby="trade-detail-title" onCancel={onClose} onClose={onClose} onClick={event => { if (event.target === dialog.current) { const bounds = dialog.current.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) onClose(); } }}>
@@ -174,7 +172,7 @@ export function TradeDetail({ trade, timeZone, demo, onClose }: { trade: Trade |
         </div>
         <div className="dialog-grid-3">
           <label className="field"><span>Net €</span><input className="form-input" inputMode="decimal" value={draft?.netEur ?? ''} onChange={event => set('netEur', event.target.value)}/></label>
-          <label className="field"><span>PnL %</span><input className="form-input" inputMode="decimal" value={draft?.pnlPercent ?? ''} onChange={event => set('pnlPercent', event.target.value)}/></label>
+          <label className="field"><span>PnL % <em className="field-badge">auto</em></span><input className="form-input computed-input" value={pnlPercentLabel(draftPnlPercent)} readOnly tabIndex={-1} aria-readonly="true"/></label>
           <label className="field"><span>R</span><input className="form-input" inputMode="decimal" value={draft?.rMultiple ?? ''} onChange={event => set('rMultiple', event.target.value)}/></label>
           <label className="field"><span>Lot size</span><input className="form-input" inputMode="decimal" value={draft?.lotSize ?? ''} onChange={event => set('lotSize', event.target.value)} placeholder="0.03"/></label>
           <label className="field"><span>Outcome tag</span><select className="form-input" value={draft?.outcomeTag ?? ''} onChange={event => set('outcomeTag', event.target.value)}><option value="">None</option><option>Win</option><option>Small win</option><option>Loss</option><option>Small loss</option><option>B/E</option></select></label>

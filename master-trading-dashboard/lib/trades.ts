@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { ensureSchema, getPool, getTrade, mapTradeRow } from './db';
+import { pnlPercentOf } from './format';
 import type { Trade } from './types';
 import { deleteUpload } from './uploads';
 import { ensureTradePage, updatePage } from './workspace';
@@ -102,6 +103,12 @@ function normalize(input: TradeInput, current?: Trade): NormalizedTrade {
   if (!tradeId) throw new Error('Trade ID is required.');
   const account = clean(value(input.account, current?.account ?? ['Forwardtesting']));
   if (!account.length) account.push('Forwardtesting');
+  const netEur = value(input.netEur, current?.netEur ?? null);
+  const accountBalance = value(input.accountBalance, current?.accountBalance ?? null);
+  // PnL % is never typed or trusted from the client: it is the realised result
+  // over the recorded balance. The old value is only kept when the inputs for
+  // a calculation are genuinely missing (for example a date-only import).
+  const pnlPercent = pnlPercentOf(netEur, accountBalance) ?? value(input.pnlPercent, current?.pnlPercent ?? null);
   return {
     tradeId,
     tradeNumber,
@@ -110,8 +117,8 @@ function normalize(input: TradeInput, current?: Trade): NormalizedTrade {
     day: text(value(input.day, current?.day ?? null)),
     pair: text(value(input.pair, current?.pair ?? null)),
     position: text(value(input.position, current?.position ?? null)),
-    netEur: value(input.netEur, current?.netEur ?? null),
-    accountBalance: value(input.accountBalance, current?.accountBalance ?? null),
+    netEur,
+    accountBalance,
     rMultiple: value(input.rMultiple, current?.rMultiple ?? null),
     setup: clean(value(input.setup, current?.setup ?? [])),
     tfType: clean(value(input.tfType, current?.tfType ?? [])),
@@ -130,7 +137,7 @@ function normalize(input: TradeInput, current?: Trade): NormalizedTrade {
     tfAlign: clean(value(input.tfAlign, current?.tfAlign ?? [])),
     orderType: text(value(input.orderType, current?.orderType ?? null)),
     lotSize: value(input.lotSize, current?.lotSize ?? null),
-    pnlPercent: value(input.pnlPercent, current?.pnlPercent ?? null),
+    pnlPercent,
     learning: text(value(input.learning, current?.learning ?? null)),
     outcomeTag: text(value(input.outcomeTag, current?.outcomeTag ?? null)),
     timeRecorded: value(input.timeRecorded, current?.timeRecorded ?? true),

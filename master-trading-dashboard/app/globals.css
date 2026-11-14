@@ -2130,6 +2130,19 @@ body { color:inherit; }
 .form-input { width: 100%; min-height: 37px; border: 1px solid var(--line); border-radius: 8px; background: var(--control); color: var(--foreground); padding: 8px 10px; font-size: 12px; font-family: inherit; transition: border-color .15s; }
 .form-input:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); }
 .form-input::placeholder { color: color-mix(in srgb, var(--muted) 62%, transparent); }
+.field-wide { grid-column: 1 / -1; }
+.field-badge { display: inline-flex; align-items: center; margin-left: 5px; padding: 1px 5px; border-radius: 4px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); font-size: 8px; font-style: normal; letter-spacing: .6px; text-transform: uppercase; }
+.computed-input { color: var(--heading); background: color-mix(in srgb, var(--accent) 7%, var(--control)); border-color: color-mix(in srgb, var(--accent) 22%, var(--line)); font-variant-numeric: tabular-nums; cursor: default; }
+.choice-field { gap: 7px; }
+.choice-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.choice-chip { display: inline-flex; align-items: center; min-height: 27px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--control); color: var(--muted); font-size: 10px; line-height: 1.25; letter-spacing: .1px; transition: color .12s, border-color .12s, background .12s, box-shadow .12s; }
+.choice-chip:hover { color: var(--foreground); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, var(--control)); }
+.choice-chip.is-selected { color: var(--heading); background: color-mix(in srgb, var(--accent) 20%, var(--control)); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent); }
+.choice-chip.is-selected::before { content: '✓'; margin-right: 5px; color: var(--accent); font-size: 9px; font-weight: 700; }
+.fact-editor-choices { flex-wrap: wrap; }
+.fact-editor-choices .choice-grid { flex: 1; }
+.fact-computed { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.fact-derived { color: var(--muted); font-size: 8px; text-transform: uppercase; letter-spacing: .5px; border: 1px solid var(--line); border-radius: 4px; padding: 1px 4px; }
 .form-textarea { resize: vertical; min-height: 100px; line-height: 1.65; }
 .checkbox-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .checkbox-field { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--control); color: var(--muted); font-size: 10px; cursor: pointer; }

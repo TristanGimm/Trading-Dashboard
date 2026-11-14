@@ -6,12 +6,28 @@ import { AlertCircle, Loader2, Save, Trash2 } from 'lucide-react';
 import type { Trade } from '@/lib/types';
 import type { Block, WorkspacePage } from '@/lib/workspace-types';
 import { dateTimeInputToIso, isoToDateTimeInput } from '@/lib/datetime';
+import { pnlPercentLabel, pnlPercentOf } from '@/lib/format';
+import { QUALITY_TIERS } from '@/lib/quality';
+import {
+  ACCOUNT_OPTIONS,
+  ALGORITHM_OPTIONS,
+  DIRECTION_OPTIONS,
+  ENTRY_TIMEFRAME_OPTIONS,
+  INSTRUMENT_OPTIONS,
+  MARKET_CONDITION_OPTIONS,
+  ORDER_TYPE_OPTIONS,
+  OUTCOME_TAG_OPTIONS,
+  SESSION_OPTIONS,
+  SETUP_OPTIONS,
+  TF_ALIGN_OPTIONS,
+  TF_TYPE_OPTIONS,
+} from '@/lib/trade-options';
+import { ChoiceField } from '@/components/journal/choice-field';
 import { ScreenshotField, imagesFromClipboard, screenshotValidationError, type PendingScreenshot } from '@/components/journal/screenshot-field';
 
 type FormState = {
-  tradeId: string;
   tradeNumber: string;
-  account: string;
+  account: string[];
   dateTime: string;
   pair: string;
   position: string;
@@ -19,10 +35,10 @@ type FormState = {
   accountBalance: string;
   rMultiple: string;
   recordedOutcome: string;
-  setup: string;
-  tfType: string;
-  algorithm: string;
-  sessionTime: string;
+  setup: string[];
+  tfType: string[];
+  algorithm: string[];
+  sessionTime: string[];
   liquiditySweep: boolean;
   dxy: boolean;
   delta: boolean;
@@ -30,12 +46,11 @@ type FormState = {
   mfe30m: string;
   mae30m: string;
   setupQuality: string;
-  marketCondition: string;
-  entryTf: string;
-  tfAlign: string;
+  marketCondition: string[];
+  entryTf: string[];
+  tfAlign: string[];
   orderType: string;
   lotSize: string;
-  pnlPercent: string;
   learning: string;
   outcomeTag: string;
   exitTime: string;
@@ -45,20 +60,19 @@ type FormState = {
 
 function initialState(trade: Trade | undefined, timeZone: string, now: string): FormState {
   return {
-    tradeId: trade?.tradeId || '',
     tradeNumber: trade?.tradeNumber ? String(trade.tradeNumber) : '',
-    account: trade?.account.join(', ') || 'Forwardtesting',
+    account: trade?.account.length ? trade.account : ['Forwardtesting'],
     dateTime: isoToDateTimeInput(trade ? trade.dateTime : now, timeZone),
-    pair: trade?.pair || '',
+    pair: trade?.pair || 'XAU/USD',
     position: trade?.position || '',
     netEur: trade?.netEur === null || trade?.netEur === undefined ? '' : String(trade.netEur),
     accountBalance: trade?.accountBalance === null || trade?.accountBalance === undefined ? '' : String(trade.accountBalance),
     rMultiple: trade?.rMultiple === null || trade?.rMultiple === undefined ? '' : String(trade.rMultiple),
     recordedOutcome: trade?.recordedOutcome || '',
-    setup: trade?.setup.join(', ') || '',
-    tfType: trade?.tfType.join(', ') || '',
-    algorithm: trade?.algorithm.join(', ') || '',
-    sessionTime: trade?.sessionTime.join(', ') || '',
+    setup: trade?.setup ?? [],
+    tfType: trade?.tfType ?? [],
+    algorithm: trade?.algorithm ?? [],
+    sessionTime: trade?.sessionTime ?? [],
     liquiditySweep: trade?.liquiditySweep || false,
     dxy: trade?.dxy || false,
     delta: trade?.delta || false,
@@ -66,12 +80,11 @@ function initialState(trade: Trade | undefined, timeZone: string, now: string): 
     mfe30m: trade?.mfe30m === null || trade?.mfe30m === undefined ? '' : String(trade.mfe30m),
     mae30m: trade?.mae30m === null || trade?.mae30m === undefined ? '' : String(trade.mae30m),
     setupQuality: trade?.setupQuality || '',
-    marketCondition: trade?.marketCondition?.join(', ') || '',
-    entryTf: trade?.entryTf?.join(', ') || '',
-    tfAlign: trade?.tfAlign?.join(', ') || '',
+    marketCondition: trade?.marketCondition ?? [],
+    entryTf: trade?.entryTf ?? [],
+    tfAlign: trade?.tfAlign ?? [],
     orderType: trade?.orderType || '',
     lotSize: trade?.lotSize === null || trade?.lotSize === undefined ? '' : String(trade.lotSize),
-    pnlPercent: trade?.pnlPercent === null || trade?.pnlPercent === undefined ? '' : String(trade.pnlPercent),
     learning: trade?.learning || '',
     outcomeTag: trade?.outcomeTag || '',
     exitTime: isoToDateTimeInput(trade?.exitTime ?? null, timeZone),
@@ -80,15 +93,19 @@ function initialState(trade: Trade | undefined, timeZone: string, now: string): 
   };
 }
 
-function list(value: string): string[] {
-  return [...new Set(value.split(',').map(item => item.trim()).filter(Boolean))];
-}
-
 function numeric(value: string, label: string): number | null {
   if (!value.trim()) return null;
   const number = Number(value.replace(',', '.'));
   if (!Number.isFinite(number)) throw new Error(`${label} must be a number.`);
   return number;
+}
+
+/** Lenient number for the live PnL % preview; validation happens on submit. */
+function previewNumber(value: string): number | null {
+  const text = value.trim().replace(',', '.');
+  if (!text) return null;
+  const number = Number(text);
+  return Number.isFinite(number) ? number : null;
 }
 
 export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: string; now: string }) {
@@ -111,6 +128,8 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
   }, []);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm(previous => ({ ...previous, [key]: value }));
+
+  const pnlPercent = pnlPercentOf(previewNumber(form.netEur), previewNumber(form.accountBalance));
 
   const addScreenshots = (files: File[]) => {
     if (pending) return;
@@ -190,20 +209,19 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
       const dateTime = dateTimeInputToIso(form.dateTime, timeZone);
       if (form.dateTime && !dateTime) throw new Error('Entry time is not valid in your timezone.');
       const payload = {
-        tradeId: form.tradeId.trim() || undefined,
         tradeNumber: form.tradeNumber.trim() ? Number(form.tradeNumber) : null,
-        account: list(form.account),
+        account: form.account,
         dateTime,
-        pair: form.pair.trim() || null,
+        pair: form.pair || null,
         position: form.position || null,
         netEur: numeric(form.netEur, 'Net P&L'),
         accountBalance: numeric(form.accountBalance, 'Account balance'),
         rMultiple: numeric(form.rMultiple, 'R multiple'),
         recordedOutcome: form.recordedOutcome || null,
-        setup: list(form.setup),
-        tfType: list(form.tfType),
-        algorithm: list(form.algorithm),
-        sessionTime: list(form.sessionTime),
+        setup: form.setup,
+        tfType: form.tfType,
+        algorithm: form.algorithm,
+        sessionTime: form.sessionTime,
         liquiditySweep: form.liquiditySweep,
         dxy: form.dxy,
         delta: form.delta,
@@ -211,14 +229,13 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
         mfe30m: numeric(form.mfe30m, 'MFE'),
         mae30m: numeric(form.mae30m, 'MAE'),
         setupQuality: form.setupQuality || null,
-        marketCondition: list(form.marketCondition),
-        entryTf: list(form.entryTf),
-        tfAlign: list(form.tfAlign),
+        marketCondition: form.marketCondition,
+        entryTf: form.entryTf,
+        tfAlign: form.tfAlign,
         orderType: form.orderType || null,
         lotSize: numeric(form.lotSize, 'Lot size'),
-        pnlPercent: numeric(form.pnlPercent, 'PnL %'),
         learning: form.learning.trim() || null,
-        outcomeTag: form.outcomeTag.trim() || null,
+        outcomeTag: form.outcomeTag || null,
         timeRecorded: Boolean(form.dateTime),
         exitTime: dateTimeInputToIso(form.exitTime, timeZone),
         analysisNote: form.analysisNote.trim() || null,
@@ -287,50 +304,49 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
   return <form className="trade-form" onSubmit={submit} onPaste={mode === 'create' ? onPaste : undefined}>
     {error && <div className="editor-error" role="alert"><AlertCircle size={14}/>{error}</div>}
     <section className="form-section">
-      <div className="form-section-heading"><h3>Trade</h3><p>Identity, timing and instrument.</p></div>
+      <div className="form-section-heading"><h3>Trade</h3><p>Timing, account and instrument. The trade number is assigned automatically when left empty.</p></div>
       <div className="form-grid">
-        <label className="field"><span>Trade ID</span><input className="form-input" value={form.tradeId} placeholder="Auto" onChange={event => update('tradeId', event.target.value)}/></label>
-        <label className="field"><span>Trade number</span><input className="form-input" inputMode="numeric" value={form.tradeNumber} placeholder="Auto" onChange={event => update('tradeNumber', event.target.value)}/></label>
         <label className="field"><span>Entry time</span><input className="form-input" type="datetime-local" value={form.dateTime} onChange={event => update('dateTime', event.target.value)}/></label>
         <label className="field"><span>Exit time</span><input className="form-input" type="datetime-local" value={form.exitTime} onChange={event => update('exitTime', event.target.value)}/><small>Optional. Leave empty when not recorded.</small></label>
-        <label className="field"><span>Account</span><input className="form-input" list="account-options" value={form.account} placeholder="Forwardtesting" onChange={event => update('account', event.target.value)}/><small>Separate multiple accounts with commas.</small></label>
-        <label className="field"><span>Instrument</span><input className="form-input" list="pair-options" value={form.pair} placeholder="XAUUSD" onChange={event => update('pair', event.target.value)}/></label>
-        <label className="field"><span>Direction</span><select className="form-input" value={form.position} onChange={event => update('position', event.target.value)}><option value="">Unrecorded</option><option>Long</option><option>Short</option></select></label>
+        <label className="field"><span>Trade number</span><input className="form-input" inputMode="numeric" value={form.tradeNumber} placeholder="Auto" onChange={event => update('tradeNumber', event.target.value)}/><small>Leave empty to use the next number.</small></label>
+        <label className="field"><span>Instrument</span><select className="form-input" value={form.pair} onChange={event => update('pair', event.target.value)}>{INSTRUMENT_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+        <label className="field"><span>Direction</span><select className="form-input" value={form.position} onChange={event => update('position', event.target.value)}><option value="">Choose…</option>{DIRECTION_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+        <ChoiceField className="field-wide" label="Account" options={ACCOUNT_OPTIONS} values={form.account} onChange={values => update('account', values)} hint="Choose more than one if the trade belongs to several accounts."/>
       </div>
     </section>
     <section className="form-section">
-      <div className="form-section-heading"><h3>Result</h3><p>Realized outcome and excursion data.</p></div>
+      <div className="form-section-heading"><h3>Result</h3><p>Type the numbers. PnL % is calculated from them.</p></div>
       <div className="form-grid">
         <label className="field"><span>Net P&amp;L (€)</span><input className="form-input" inputMode="decimal" value={form.netEur} placeholder="e.g. 125.50" onChange={event => update('netEur', event.target.value)}/></label>
         <label className="field"><span>Account balance (€)</span><input className="form-input" inputMode="decimal" value={form.accountBalance} placeholder="Recorded balance" onChange={event => update('accountBalance', event.target.value)}/></label>
+        <label className="field"><span>PnL % <em className="field-badge">auto</em></span><input className="form-input computed-input" value={pnlPercentLabel(pnlPercent)} readOnly tabIndex={-1} aria-readonly="true"/><small>Net P&amp;L ÷ account balance. Nothing to type.</small></label>
         <label className="field"><span>R multiple</span><input className="form-input" inputMode="decimal" value={form.rMultiple} placeholder="e.g. 1.8" onChange={event => update('rMultiple', event.target.value)}/></label>
-        <label className="field"><span>Recorded outcome</span><select className="form-input" value={form.recordedOutcome} onChange={event => update('recordedOutcome', event.target.value)}><option value="">Derive from Net P&amp;L</option><option value="win">Win</option><option value="loss">Loss</option><option value="breakeven">Break-even</option></select></label>
+        <label className="field"><span>Lot size</span><input className="form-input" inputMode="decimal" value={form.lotSize} placeholder="e.g. 0.03" onChange={event => update('lotSize', event.target.value)}/></label>
         <label className="field"><span>MFE (30 min)</span><input className="form-input" inputMode="decimal" value={form.mfe30m} placeholder="Maximum favorable" onChange={event => update('mfe30m', event.target.value)}/></label>
         <label className="field"><span>MAE (30 min)</span><input className="form-input" inputMode="decimal" value={form.mae30m} placeholder="Maximum adverse" onChange={event => update('mae30m', event.target.value)}/></label>
-        <label className="field"><span>PnL %</span><input className="form-input" inputMode="decimal" value={form.pnlPercent} placeholder="e.g. 2.52" onChange={event => update('pnlPercent', event.target.value)}/></label>
-        <label className="field"><span>Lot size</span><input className="form-input" inputMode="decimal" value={form.lotSize} placeholder="e.g. 0.03" onChange={event => update('lotSize', event.target.value)}/></label>
-        <label className="field"><span>Outcome tag</span><select className="form-input" value={form.outcomeTag} onChange={event => update('outcomeTag', event.target.value)}><option value="">None</option><option>Win</option><option>Small win</option><option>Loss</option><option>Small loss</option><option>B/E</option></select><small>The Notion-style granular tag, kept alongside the net result.</small></label>
+        <label className="field"><span>Recorded outcome</span><select className="form-input" value={form.recordedOutcome} onChange={event => update('recordedOutcome', event.target.value)}><option value="">Derive from Net P&amp;L</option><option value="win">Win</option><option value="loss">Loss</option><option value="breakeven">Break-even</option></select></label>
+        <label className="field"><span>Outcome tag</span><select className="form-input" value={form.outcomeTag} onChange={event => update('outcomeTag', event.target.value)}><option value="">None</option>{OUTCOME_TAG_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</select><small>The granular label, kept alongside the net result.</small></label>
       </div>
     </section>
     <section className="form-section">
-      <div className="form-section-heading"><h3>Context</h3><p>Setups, sessions and timeframes. Separate values with commas.</p></div>
+      <div className="form-section-heading"><h3>Context</h3><p>Choose everything that applies. No typing.</p></div>
       <div className="form-grid">
-        <label className="field"><span>Setup</span><input className="form-input" list="setup-options" value={form.setup} placeholder="LTF Reversal, Liquidity Sweep" onChange={event => update('setup', event.target.value)}/></label>
-        <label className="field"><span>Session</span><input className="form-input" list="session-options" value={form.sessionTime} placeholder="London, New York" onChange={event => update('sessionTime', event.target.value)}/></label>
-        <label className="field"><span>TF Type</span><input className="form-input" list="tf-options" value={form.tfType} placeholder="1m Type 3, 5s Type 3" onChange={event => update('tfType', event.target.value)}/></label>
-        <label className="field"><span>Algorithm</span><input className="form-input" list="algorithm-options" value={form.algorithm} placeholder="CBR, CBC" onChange={event => update('algorithm', event.target.value)}/></label>
-        <label className="field"><span>Setup Quality</span><select className="form-input" value={form.setupQuality} onChange={event => update('setupQuality', event.target.value)}><option value="">Unrated</option><option>Common</option><option>Magic</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Ascension</option></select></label>
-        <label className="field"><span>Order type</span><select className="form-input" value={form.orderType} onChange={event => update('orderType', event.target.value)}><option value="">Unrecorded</option><option>Market</option><option>Limit</option></select></label>
-        <label className="field"><span>Entry TF</span><input className="form-input" list="tf-values" value={form.entryTf} placeholder="1m, 5m, 1h" onChange={event => update('entryTf', event.target.value)}/></label>
-        <label className="field"><span>TF Align</span><input className="form-input" list="tf-values" value={form.tfAlign} placeholder="15m, 1h, 4h" onChange={event => update('tfAlign', event.target.value)}/></label>
-        <label className="field"><span>Market Condition</span><input className="form-input" list="condition-options" value={form.marketCondition} placeholder="Bullish, Ranging" onChange={event => update('marketCondition', event.target.value)}/></label>
+        <ChoiceField className="field-wide" label="Setup" options={SETUP_OPTIONS} values={form.setup} onChange={values => update('setup', values)}/>
+        <ChoiceField className="field-wide" label="Session" options={SESSION_OPTIONS} values={form.sessionTime} onChange={values => update('sessionTime', values)}/>
+        <ChoiceField className="field-wide" label="Market condition" options={MARKET_CONDITION_OPTIONS} values={form.marketCondition} onChange={values => update('marketCondition', values)}/>
+        <ChoiceField className="field-wide" label="Entry TF" options={ENTRY_TIMEFRAME_OPTIONS} values={form.entryTf} onChange={values => update('entryTf', values)}/>
+        <ChoiceField className="field-wide" label="TF align" options={TF_ALIGN_OPTIONS} values={form.tfAlign} onChange={values => update('tfAlign', values)}/>
+        <ChoiceField className="field-wide" label="TF type" options={TF_TYPE_OPTIONS} values={form.tfType} onChange={values => update('tfType', values)} hint="The entry timeframe and its setup type."/>
+        <ChoiceField className="field-wide" label="Algorithm" options={ALGORITHM_OPTIONS} values={form.algorithm} onChange={values => update('algorithm', values)}/>
+        <label className="field"><span>Setup quality</span><select className="form-input" value={form.setupQuality} onChange={event => update('setupQuality', event.target.value)}><option value="">Unrated</option>{QUALITY_TIERS.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+        <label className="field"><span>Order type</span><select className="form-input" value={form.orderType} onChange={event => update('orderType', event.target.value)}><option value="">Unrecorded</option>{ORDER_TYPE_OPTIONS.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
       </div>
       <div className="checkbox-row">
         {([['liquiditySweep', 'Liquidity sweep'], ['dxy', 'DXY confirmation'], ['delta', 'Delta'], ['fractalShift', 'Fractal shift']] as const).map(([key, label]) => <label key={key} className="checkbox-field"><input type="checkbox" checked={form[key]} onChange={event => update(key, event.target.checked)}/><span>{label}</span></label>)}
       </div>
     </section>
     <section className="form-section">
-      <div className="form-section-heading"><h3>Review</h3><p>What did this trade teach you, and where is the chart?</p></div>
+      <div className="form-section-heading"><h3>Review</h3><p>Optional. What did this trade teach you, and where is the chart?</p></div>
       <div className="form-grid">
         <label className="field"><span>Learning</span><textarea className="form-input form-textarea" rows={3} value={form.learning} placeholder="Random trading. Became greedy. Against trend." onChange={event => update('learning', event.target.value)}/></label>
         <label className="field"><span>Analysis reference</span><textarea className="form-input form-textarea" rows={3} value={form.analysisNote} placeholder="Path or note about the screenshot" onChange={event => update('analysisNote', event.target.value)}/><small>Screenshots belong on the trade page — paste them there with ⌘V.</small></label>
@@ -350,13 +366,5 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
       <button type="button" className="button" disabled={pending} onClick={() => router.back()}>Cancel</button>
       {mode === 'edit' && <button type="button" className="button button-danger" disabled={pending} onClick={remove}><Trash2 size={13}/>Delete trade</button>}
     </div>
-    <datalist id="account-options"><option value="Forwardtesting"/><option value="Backtest"/></datalist>
-    <datalist id="pair-options">{['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'NAS100', 'US30', 'BTCUSD'].map(value => <option key={value} value={value}/>)}</datalist>
-    <datalist id="setup-options">{['LTF Reversal', 'LTF Continuation', 'HTF Reversal', 'HTF Continuation', 'Liquidity Sweep', 'Breakout'].map(value => <option key={value} value={value}/>)}</datalist>
-    <datalist id="session-options">{['Asia', 'London', 'New York', 'London / New York'].map(value => <option key={value} value={value}/>)}</datalist>
-    <datalist id="tf-options">{['1m Type 3', '5s Type 3', '5m Type 1', '15m Type 2', '1hr Type 3', '4hr Type 3'].map(value => <option key={value} value={value}/>)}</datalist>
-    <datalist id="tf-values">{['5s', '1m', '5m', '15m', '30m', '1h', '4h'].map(value => <option key={value} value={value}/>)}</datalist>
-    <datalist id="algorithm-options">{['CBR', 'CBC', 'Stocks'].map(value => <option key={value} value={value}/>)}</datalist>
-    <datalist id="condition-options">{['Bullish', 'Bearish', 'Ranging', 'Bullish Ranging', 'Bearish Ranging'].map(value => <option key={value} value={value}/>)}</datalist>
   </form>;
 }

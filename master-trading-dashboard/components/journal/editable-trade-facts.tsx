@@ -5,12 +5,25 @@ import { useRouter } from 'next/navigation';
 import { Check, Loader2, Pencil, X } from 'lucide-react';
 import type { Trade } from '@/lib/types';
 import { dateTimeInputToIso, isoToDateTimeInput } from '@/lib/datetime';
-import { money, number } from '@/lib/format';
+import { money, number, pnlPercentLabel } from '@/lib/format';
 import { QUALITY_TIERS } from '@/lib/quality';
+import {
+  ACCOUNT_OPTIONS,
+  ALGORITHM_OPTIONS,
+  ENTRY_TIMEFRAME_OPTIONS,
+  INSTRUMENT_OPTIONS,
+  MARKET_CONDITION_OPTIONS,
+  ORDER_TYPE_OPTIONS,
+  OUTCOME_TAG_OPTIONS,
+  SESSION_OPTIONS,
+  SETUP_OPTIONS,
+  TF_ALIGN_OPTIONS,
+} from '@/lib/trade-options';
+import { ChoiceChips } from '@/components/journal/choice-field';
 import { QualityBadge } from '@/components/quality-badge';
 import { cn } from '@/lib/utils';
 
-type FieldKind = 'text' | 'list' | 'number' | 'select' | 'datetime' | 'textarea';
+type FieldKind = 'text' | 'list' | 'number' | 'select' | 'datetime' | 'textarea' | 'computed';
 
 type FieldKey =
   | 'dateTime' | 'exitTime' | 'account' | 'pair' | 'position' | 'netEur'
@@ -24,6 +37,8 @@ type Field = {
   kind: FieldKind;
   apiKey: string;
   options?: { value: string; label: string }[];
+  /** Fixed vocabulary for a multi-value chip field. */
+  choices?: string[];
   value: (trade: Trade, timeZone: string) => string;
   display: (trade: Trade, timeZone: string) => ReactNode;
   parse: (value: string, timeZone: string) => unknown;
@@ -76,12 +91,14 @@ const FIELDS: Field[] = [
   },
   {
     key: 'account', label: 'Account', kind: 'list', apiKey: 'account',
+    choices: ACCOUNT_OPTIONS,
     value: trade => trade.account.join(', '),
     display: trade => trade.account.join(', ') || 'Untagged',
     parse: value => splitList(value),
   },
   {
-    key: 'pair', label: 'Instrument', kind: 'text', apiKey: 'pair',
+    key: 'pair', label: 'Instrument', kind: 'select', apiKey: 'pair',
+    options: [{ value: '', label: 'Unrecorded' }, ...INSTRUMENT_OPTIONS.map(value => ({ value, label: value }))],
     value: trade => trade.pair ?? '',
     display: trade => trade.pair || missing,
     parse: nullableText,
@@ -101,6 +118,7 @@ const FIELDS: Field[] = [
   },
   {
     key: 'setup', label: 'Setup', kind: 'list', apiKey: 'setup',
+    choices: SETUP_OPTIONS,
     value: trade => trade.setup.join(', '),
     display: trade => trade.setup.length ? trade.setup.join(', ') : missing,
     parse: value => splitList(value),
@@ -114,37 +132,42 @@ const FIELDS: Field[] = [
   },
   {
     key: 'algorithm', label: 'Algorithm', kind: 'list', apiKey: 'algorithm',
+    choices: ALGORITHM_OPTIONS,
     value: trade => trade.algorithm.join(', '),
     display: trade => trade.algorithm.length ? trade.algorithm.join(', ') : missing,
     parse: value => splitList(value),
   },
   {
     key: 'sessionTime', label: 'Session', kind: 'list', apiKey: 'sessionTime',
+    choices: SESSION_OPTIONS,
     value: trade => trade.sessionTime.join(', '),
     display: trade => trade.sessionTime.length ? trade.sessionTime.join(', ') : missing,
     parse: value => splitList(value),
   },
   {
     key: 'marketCondition', label: 'Market condition', kind: 'list', apiKey: 'marketCondition',
+    choices: MARKET_CONDITION_OPTIONS,
     value: trade => (trade.marketCondition ?? []).join(', '),
     display: trade => (trade.marketCondition ?? []).length ? (trade.marketCondition ?? []).join(', ') : missing,
     parse: value => splitList(value),
   },
   {
     key: 'entryTf', label: 'Entry TF', kind: 'list', apiKey: 'entryTf',
+    choices: ENTRY_TIMEFRAME_OPTIONS,
     value: trade => (trade.entryTf ?? []).join(', '),
     display: trade => (trade.entryTf ?? []).length ? (trade.entryTf ?? []).join(', ') : missing,
     parse: value => splitList(value),
   },
   {
     key: 'tfAlign', label: 'TF align', kind: 'list', apiKey: 'tfAlign',
+    choices: TF_ALIGN_OPTIONS,
     value: trade => (trade.tfAlign ?? []).join(', '),
     display: trade => (trade.tfAlign ?? []).length ? (trade.tfAlign ?? []).join(', ') : missing,
     parse: value => splitList(value),
   },
   {
     key: 'orderType', label: 'Order type', kind: 'select', apiKey: 'orderType',
-    options: [{ value: '', label: 'Unrecorded' }, { value: 'Market', label: 'Market' }, { value: 'Limit', label: 'Limit' }],
+    options: [{ value: '', label: 'Unrecorded' }, ...ORDER_TYPE_OPTIONS.map(value => ({ value, label: value }))],
     value: trade => trade.orderType ?? '',
     display: trade => trade.orderType || missing,
     parse: nullableText,
@@ -156,10 +179,10 @@ const FIELDS: Field[] = [
     parse: value => numeric(value, 'R multiple'),
   },
   {
-    key: 'pnlPercent', label: 'PnL %', kind: 'number', apiKey: 'pnlPercent',
+    key: 'pnlPercent', label: 'PnL %', kind: 'computed', apiKey: 'pnlPercent',
     value: trade => trade.pnlPercent == null ? '' : String(trade.pnlPercent),
-    display: trade => trade.pnlPercent == null ? missing : `${number(trade.pnlPercent)}%`,
-    parse: value => numeric(value, 'PnL %'),
+    display: trade => trade.pnlPercent == null ? missing : pnlPercentLabel(trade.pnlPercent),
+    parse: () => null,
   },
   {
     key: 'lotSize', label: 'Lot size', kind: 'number', apiKey: 'lotSize',
@@ -194,7 +217,7 @@ const FIELDS: Field[] = [
   },
   {
     key: 'outcomeTag', label: 'Outcome tag', kind: 'select', apiKey: 'outcomeTag',
-    options: [{ value: '', label: 'None' }, ...['Win', 'Small win', 'Loss', 'Small loss', 'B/E'].map(value => ({ value, label: value }))],
+    options: [{ value: '', label: 'None' }, ...OUTCOME_TAG_OPTIONS.map(value => ({ value, label: value }))],
     value: trade => trade.outcomeTag ?? '',
     display: trade => trade.outcomeTag || missing,
     parse: nullableText,
@@ -250,6 +273,7 @@ export function EditableTradeFacts({ trade: initial, timeZone, variant = 'panel'
   const fields = FIELDS.filter(field => !exclude.includes(field.key));
 
   const start = (field: Field) => {
+    editor.current = null;
     setEditing(field.key);
     setDraft(field.value(trade, timeZone));
     setSaved(null);
@@ -296,55 +320,59 @@ export function EditableTradeFacts({ trade: initial, timeZone, variant = 'panel'
         return <div key={field.key} className={cn('fact-row', field.kind === 'textarea' && 'fact-row-wide', isEditing && 'is-editing')}>
           <dt>{field.label}</dt>
           <dd>
-            {isEditing ? <div className="fact-editor">
-              {field.kind === 'select'
-                ? <select
-                    ref={element => { editor.current = element; }}
-                    className="fact-input"
-                    aria-label={field.label}
-                    value={draft}
-                    onChange={event => { setDraft(event.target.value); void save(field, event.target.value); }}
-                    onKeyDown={event => { if (event.key === 'Escape') cancel(); }}
-                  >
-                    {field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-                  </select>
-                : field.kind === 'textarea'
-                  ? <textarea
+            {field.kind === 'computed'
+              ? <div className="fact-computed"><span className="fact-value-text">{field.display(trade, timeZone)}</span><span className="fact-derived">auto</span></div>
+              : isEditing ? <div className={cn('fact-editor', field.kind === 'list' && 'fact-editor-choices')}>
+                {field.kind === 'list'
+                  ? <ChoiceChips label={field.label} options={field.choices ?? []} values={splitList(draft)} onChange={next => setDraft(next.join(', '))}/>
+                  : field.kind === 'select'
+                  ? <select
                       ref={element => { editor.current = element; }}
                       className="fact-input"
                       aria-label={field.label}
-                      rows={3}
                       value={draft}
-                      onChange={event => setDraft(event.target.value)}
-                      onKeyDown={event => {
-                        if (event.key === 'Escape') { event.preventDefault(); cancel(); }
-                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); void save(field, draft); }
-                      }}
-                    />
-                  : <input
-                      ref={element => { editor.current = element; }}
-                      className="fact-input"
-                      aria-label={field.label}
-                      type={field.kind === 'datetime' ? 'datetime-local' : 'text'}
-                      inputMode={field.kind === 'number' ? 'decimal' : undefined}
-                      value={draft}
-                      onChange={event => setDraft(event.target.value)}
-                      onKeyDown={event => {
-                        if (event.key === 'Escape') { event.preventDefault(); cancel(); }
-                        if (event.key === 'Enter') { event.preventDefault(); void save(field, draft); }
-                      }}
-                    />}
-              {field.kind !== 'select' && <div className="fact-editor-actions">
-                <button type="button" className="fact-check" aria-label={`Save ${field.label}`} disabled={saving === field.key} onClick={() => void save(field, draft)}>
-                  {saving === field.key ? <Loader2 size={12} className="animate-spin"/> : <Check size={12}/>}
-                </button>
-                <button type="button" aria-label={`Cancel editing ${field.label}`} onClick={cancel}><X size={12}/></button>
-              </div>}
-            </div>
-            : <button type="button" className="fact-value" aria-label={`Edit ${field.label.toLowerCase()}`} onClick={() => start(field)}>
-              <span className="fact-value-text">{field.display(trade, timeZone)}</span>
-              {saved === field.key ? <span className="fact-saved">Saved</span> : <Pencil size={11} className="fact-pencil"/>}
-            </button>}
+                      onChange={event => { setDraft(event.target.value); void save(field, event.target.value); }}
+                      onKeyDown={event => { if (event.key === 'Escape') cancel(); }}
+                    >
+                      {field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                  : field.kind === 'textarea'
+                    ? <textarea
+                        ref={element => { editor.current = element; }}
+                        className="fact-input"
+                        aria-label={field.label}
+                        rows={3}
+                        value={draft}
+                        onChange={event => setDraft(event.target.value)}
+                        onKeyDown={event => {
+                          if (event.key === 'Escape') { event.preventDefault(); cancel(); }
+                          if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); void save(field, draft); }
+                        }}
+                      />
+                    : <input
+                        ref={element => { editor.current = element; }}
+                        className="fact-input"
+                        aria-label={field.label}
+                        type={field.kind === 'datetime' ? 'datetime-local' : 'text'}
+                        inputMode={field.kind === 'number' ? 'decimal' : undefined}
+                        value={draft}
+                        onChange={event => setDraft(event.target.value)}
+                        onKeyDown={event => {
+                          if (event.key === 'Escape') { event.preventDefault(); cancel(); }
+                          if (event.key === 'Enter') { event.preventDefault(); void save(field, draft); }
+                        }}
+                      />}
+                {field.kind !== 'select' && <div className="fact-editor-actions">
+                  <button type="button" className="fact-check" aria-label={`Save ${field.label}`} disabled={saving === field.key} onClick={() => void save(field, draft)}>
+                    {saving === field.key ? <Loader2 size={12} className="animate-spin"/> : <Check size={12}/>}
+                  </button>
+                  <button type="button" aria-label={`Cancel editing ${field.label}`} onClick={cancel}><X size={12}/></button>
+                </div>}
+              </div>
+              : <button type="button" className="fact-value" aria-label={`Edit ${field.label.toLowerCase()}`} onClick={() => start(field)}>
+                <span className="fact-value-text">{field.display(trade, timeZone)}</span>
+                {saved === field.key ? <span className="fact-saved">Saved</span> : <Pencil size={11} className="fact-pencil"/>}
+              </button>}
           </dd>
         </div>;
       })}

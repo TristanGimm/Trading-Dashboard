@@ -4,7 +4,6 @@ import { ArrowLeft } from 'lucide-react';
 import { requireSession } from '@/lib/auth';
 import { getDashboardTimezone } from '@/lib/timezone';
 import { getTrade } from '@/lib/db';
-import { listPageSummaries } from '@/lib/workspace';
 import { TradeForm } from '@/components/journal/trade-form';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +14,6 @@ export default async function EditTradePage({ params }: { params: Promise<{ id: 
   const trade = await getTrade(id);
   if (!trade) notFound();
   const timeZone = getDashboardTimezone(process.env.DASHBOARD_TIMEZONE);
-  const pages = await listPageSummaries('page');
   return <>
     <div className="page-heading">
       <div><div className="eyebrow">JOURNAL / EDIT TRADE</div><h1>Edit trade #{trade.tradeId}.</h1><p>Update the recorded properties. Notes and screenshots live on the trade page.</p></div>
