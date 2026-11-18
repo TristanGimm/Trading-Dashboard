@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  BookOpen, CalendarDays, ChevronRight, Compass, LayoutDashboard, LogOut, PenLine,
+  BookOpen, CalendarDays, ChevronRight, Compass, LayoutDashboard, LogOut, Newspaper, PenLine,
   SlidersHorizontal, TableProperties,
 } from 'lucide-react';
 import { signOut } from '@/app/login/actions';
@@ -18,11 +18,12 @@ import { buildPageTree } from '@/lib/page-tree';
 import type { WorkspacePageSummary } from '@/lib/workspace-types';
 import { cn } from '@/lib/utils';
 
-export type ShellSection = 'workspace' | 'strategy' | 'overview' | 'journal' | 'calendar' | 'analytics';
+export type ShellSection = 'workspace' | 'strategy' | 'overview' | 'journal' | 'calendar' | 'news' | 'analytics';
 
 const navigation = [
   { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard, href: '/dashboard' },
   { id: 'calendar' as const, label: 'Trading Calendar', icon: CalendarDays, href: '/calendar' },
+  { id: 'news' as const, label: 'News', icon: Newspaper, href: '/news' },
   { id: 'journal' as const, label: 'Trading Journal', icon: TableProperties, href: '/journal' },
   { id: 'strategy' as const, label: 'Trading Strategy', icon: Compass, href: '/strategy' },
   { id: 'analytics' as const, label: 'Analytics', icon: SlidersHorizontal, href: '/analytics' },
@@ -30,7 +31,7 @@ const navigation = [
 ];
 
 const mobileLabels: Record<ShellSection, string> = {
-  overview: 'Overview', calendar: 'Calendar', journal: 'Journal',
+  overview: 'Overview', calendar: 'Calendar', news: 'News', journal: 'Journal',
   strategy: 'Strategy', analytics: 'Analytics', workspace: 'Notes',
 };
 
@@ -43,6 +44,7 @@ function sectionOf(pathname: string): ShellSection {
   if (pathname === '/strategy' || pathname.startsWith('/strategy/')) return 'strategy';
   if (pathname === '/journal' || pathname.startsWith('/journal/')) return 'journal';
   if (pathname === '/calendar') return 'calendar';
+  if (pathname === '/news' || pathname.startsWith('/news/')) return 'news';
   if (pathname === '/analytics') return 'analytics';
   return 'overview';
 }
@@ -70,6 +72,8 @@ export function AppShell({ pages, demo, timeZone, children }: {
         return [{ label: 'Trading Journal' }];
       case 'calendar':
         return [{ label: 'Trading Calendar' }];
+      case 'news':
+        return [{ label: 'News' }];
       case 'analytics':
         return [{ label: 'Analytics' }];
       default:

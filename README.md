@@ -10,6 +10,7 @@ A private trading journal and analytics workspace built with Next.js, TypeScript
 - **Pick-only entry** — every categorical property (account, instrument, direction, setup, session, market condition, entry timeframe, TF alignment, TF type, algorithm, setup quality, order type, outcome tag) is chosen from a fixed list of the journal's own values. Only numbers and review prose are typed, so a trade can be recorded without remembering field spellings.
 - **Derived PnL %** — the realised percentage is calculated as net P&L ÷ account balance in the form and again on the server; it is never typed and cannot drift from the two numbers it describes.
 - **Trade review pages** — each trade has a page for notes and chart screenshots. Paste screenshots with `⌘V`/`Ctrl+V` or drag and drop them.
+- **Daily news briefing** — a `/news` page for the current day, the week, the month, the running year and 2025, plus an outlook, AI/tech news, structural changes (CEO exits, M&A, crises) and a watchlist that only names companies with a real signal. Public RSS feeds are collected on the server, DeepSeek writes the German analysis, and a Kubernetes CronJob refreshes it every morning at 06:30 Europe/Berlin. The page cites the articles it used and runs a deterministic numeric check against the feed text.
 - **Trading Strategy** — the written playbook: process, timing, entry models, stop/target rules and the CBR/CBC algorithms. Every card, line and checkbox is editable in place and stored in `strategy_board`, so the page is a document rather than a hard-coded screen.
 - **Full Notion field set** — setup quality, market condition, entry timeframe, TF alignment, order type, lot size, PnL %, learning notes and the granular outcome tag (Win / Small win / Loss / Small loss / B/E).
 - **Column picker** — the journal has 27 columns; choose which ones you see, and the choice is remembered per browser. The default order reads like a trade review: trade → date → entry → exit → instrument → direction → screenshot → algorithm → quality → setup → market condition → confluences → entry TF → TF type → TF align → session → outcome → net P&L → PnL % → R → lots → order → MFE → MAE.
@@ -47,6 +48,7 @@ In light mode the backdrop is switched off entirely. A dark space video behind a
 /login/reset               request a password reset
 /dashboard                 overview
 /calendar                  trading calendar
+/news                      daily fundamental briefing (XAU/USD, tech, AI)
 /journal                   master trading journal (the table)
 /analytics                 analytics
 /workspace                 document workspace
@@ -64,6 +66,7 @@ In light mode the backdrop is switched off entirely. A dark space video behind a
 | `trades` | Recorded trade properties and realized results. Primary source of truth. |
 | `pages` | Workspace pages. Trade pages are linked through `trade_id` and are created on demand. |
 | `strategy_board` | Singleton row holding the editable strategy playbook as JSONB. |
+| `news_editions` | One row per briefing day: structured JSONB payload, source count, model, status and the last error. |
 | `assets` | Uploaded screenshots and their metadata; files live in `UPLOAD_DIR`. |
 
 Trade columns carry the full journal schema. A few have deliberate semantics:
@@ -150,6 +153,43 @@ Without SMTP the message is appended to `MAIL_DIR/outbox.log` and the API report
 ```sh
 docker compose exec web tail -20 /app/mail/outbox.log
 ```
+
+### Daily news briefing
+
+The `/news` page is a server-rendered briefing, not a live chat. A run does four things:
+
+1. collects public RSS and Google News headlines for gold/XAU, macro/Fed, markets, semiconductors, AI, the watchlist and corporate changes,
+2. fetches a small quote snapshot (XAU/USD spot, DXY, US 10Y, VIX, Nasdaq/S&P futures, EUR/USD),
+3. sends the dated, numbered headlines to DeepSeek in JSON mode and asks for a short German analysis with citations,
+4. validates every citation against the actual feed item and stores the result in `news_editions`.
+
+The analysis is grounded in the supplied headlines: the prompt tells the model to treat them as data, not instructions, and `lib/news/grounding.ts` checks numeric claims against the feed text and quote snapshot. A citation the model invents is dropped; a number that cannot be found is listed in the footer as *ohne direkten Beleg* rather than being silently trusted.
+
+Set the key on the server (never in the browser):
+
+```sh
+DEEPSEEK_API_KEY=...
+DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+NEWS_CRON_TOKEN=<openssl rand -hex 32>
+```
+
+The page refreshes itself when it is opened and today's edition is missing or older than 20 hours. The **Aktualisieren** button forces a new run. The same endpoint is used by the scheduler:
+
+```sh
+# wait for the result (the CronJob uses this form)
+curl -X POST "http://trading-dashboard-web:3000/api/news/generate?wait=1" \
+  -H "Authorization: Bearer $NEWS_CRON_TOKEN" \
+  -H "content-type: application/json" -d '{"force":false}'
+
+# fire and forget (the browser uses this form)
+curl -X POST "http://trading-dashboard-web:3000/api/news/generate" \
+  -H "Authorization: Bearer $NEWS_CRON_TOKEN" -d '{}'
+```
+
+A PostgreSQL advisory lock means two workers cannot generate the same day twice. A failed run never deletes the last good briefing; the page shows the stored edition with an error notice. The daily Kubernetes CronJob lives in the GitOps repository under `kubernetes/apps/dashboard/dashboard.yaml` and runs at 06:30 Europe/Berlin.
+
+Without `DEEPSEEK_API_KEY` the backend can source feeds but the generation step reports a clear configuration error instead of writing an empty briefing.
 
 ### Uploads
 

@@ -123,6 +123,18 @@ CREATE TABLE IF NOT EXISTS strategy_board (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS news_editions (
+  edition_date DATE PRIMARY KEY,
+  status TEXT NOT NULL DEFAULT 'ready' CHECK (status IN ('ready','running','error')),
+  payload JSONB,
+  model TEXT,
+  source_count INTEGER NOT NULL DEFAULT 0,
+  generated_at TIMESTAMPTZ,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  error TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_news_editions_generated ON news_editions(generated_at DESC);
+
 CREATE TABLE IF NOT EXISTS assets (
   id UUID PRIMARY KEY,
   page_id UUID NOT NULL REFERENCES pages(id) ON DELETE CASCADE,

@@ -200,6 +200,16 @@ try {
   await screenshot('analytics-desktop');
   check('analytics charts, setup group, minimum sample and metric switching');
 
+  await navigate('News');
+  await page.getByRole('heading', { name: 'News', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Diese Woche', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '2025 · Rückblick', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Ausblick', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Watchlist', exact: true }).waitFor();
+  await noOverflow(1440);
+  await screenshot('news-desktop');
+  check('daily news briefing renders day, week, month, year, 2025, outlook and watchlist');
+
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     // The shell switches to its mobile layout in CSS; wait for that switch so
@@ -220,6 +230,14 @@ try {
     await page.getByRole('heading', { name: 'Trading Journal', exact: true }).waitFor();
     await noOverflow(width);
     if (width === 390) await screenshot('journal-mobile');
+    await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'News', exact: true }).click();
+    await page.getByRole('heading', { name: 'News', exact: true }).waitFor();
+    await page.getByRole('heading', { name: 'Ausblick', exact: true }).waitFor();
+    await noOverflow(width);
+    if (width === 390) await screenshot('news-mobile');
+    // Leave the loop on the journal, where the account filter test resumes.
+    await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Journal', exact: true }).click();
+    await page.getByRole('heading', { name: 'Trading Journal', exact: true }).waitFor();
   }
   check('mobile navigation and contained layouts at 390px and 320px');
   await page.getByRole('combobox', { name: 'Account filter' }).selectOption('Backtest');
