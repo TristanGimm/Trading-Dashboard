@@ -26,34 +26,34 @@ export const WATCHLIST = [
 ];
 
 const SCHEMA_EXAMPLE = `{
-  "headline": "Ein Satz, der den Handelstag auf den Punkt bringt",
+  "headline": "Ein vollständiger Satz, max. 18 Wörter, der den Handelstag auf den Punkt bringt",
   "marketPulse": [
-    {"label": "Gold", "stance": "bullish|bearish|neutral", "note": "max. 18 Wörter"},
-    {"label": "US-Dollar", "stance": "bullish|bearish|neutral", "note": "max. 18 Wörter"},
-    {"label": "Tech", "stance": "bullish|bearish|neutral", "note": "max. 18 Wörter"},
-    {"label": "Risiko", "stance": "bullish|bearish|neutral", "note": "max. 18 Wörter"}
+    {"label": "Gold", "stance": "bullish|bearish|neutral", "note": "max. 18 Wörter, vollständiger Satz"},
+    {"label": "US-Dollar", "stance": "bullish|bearish|neutral", "note": "max. 18 Wörter, vollständiger Satz"},
+    {"label": "Tech", "stance": "bullish|bearish|neutral", "note": "max. 18 Wörter, vollständiger Satz"},
+    {"label": "Risiko", "stance": "bullish|bearish|neutral", "note": "max. 18 Wörter, vollständiger Satz"}
   ],
   "today": {
-    "summary": "2–3 Sätze, max. 60 Wörter",
+    "summary": "3 vollständige Sätze, max. 70 Wörter",
     "bullets": [
-      {"text": "max. 22 Wörter", "impact": "bullish|bearish|neutral", "assets": ["XAU/USD"], "refs": ["S1", "S2"]}
+      {"text": "max. 30 Wörter, vollständiger Satz", "impact": "bullish|bearish|neutral", "assets": ["XAU/USD"], "refs": ["S1", "S2"]}
     ]
   },
-  "week": {"summary": "...", "bullets": []},
-  "month": {"summary": "...", "bullets": []},
-  "year": {"summary": "...", "bullets": []},
-  "lastYear": {"summary": "...", "bullets": []},
+  "week": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
+  "month": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
+  "year": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
+  "lastYear": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
   "outlook": [
-    {"horizon": "Nächste Woche", "bias": "bullish|bearish|neutral", "summary": "max. 45 Wörter"},
-    {"horizon": "Nächster Monat", "bias": "bullish|bearish|neutral", "summary": "max. 45 Wörter"},
-    {"horizon": "Bis Jahresende", "bias": "bullish|bearish|neutral", "summary": "max. 45 Wörter"}
+    {"horizon": "Nächste Woche", "bias": "bullish|bearish|neutral", "summary": "2 vollständige Sätze, max. 60 Wörter"},
+    {"horizon": "Nächster Monat", "bias": "bullish|bearish|neutral", "summary": "2 vollständige Sätze, max. 60 Wörter"},
+    {"horizon": "Bis Jahresende", "bias": "bullish|bearish|neutral", "summary": "2 vollständige Sätze, max. 60 Wörter"}
   ],
-  "ai": {"summary": "...", "bullets": []},
+  "ai": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
   "movers": [
-    {"title": "max. 10 Wörter", "detail": "max. 20 Wörter", "impact": "bullish|bearish|neutral"}
+    {"title": "max. 10 Wörter", "detail": "max. 25 Wörter, vollständiger Satz", "impact": "bullish|bearish|neutral"}
   ],
   "watchlist": [
-    {"symbol": "NVDA", "name": "NVIDIA", "sentiment": "bullish|bearish|neutral", "note": "max. 16 Wörter"}
+    {"symbol": "NVDA", "name": "NVIDIA", "sentiment": "bullish|bearish|neutral", "note": "max. 16 Wörter, vollständiger Satz"}
   ]
 }`;
 
@@ -80,6 +80,8 @@ export function buildNewsPrompt(input: {
     '- "refs" enthält die IDs der tatsächlich verwendeten Schlagzeilen. Erfinde keine IDs und keine URLs.',
     '- Jede Zahl muss wörtlich in einer Schlagzeile, einer Zusammenfassung oder der Marktlage vorkommen. Leite keine Kursstände aus „Rekord“ oder „Crash“ ab; schreibe dann „auf Rekordniveau“.',
     '- Halte die Längen ein. Lieber eine scharfe Beobachtung als drei allgemeine Sätze.',
+    '- Jede Zusammenfassung ist ein in sich geschlossener Text: Leitsatz zuerst, dann höchstens zwei stützende Sätze. Kein Satz darf abgeschnitten sein, keine offene Aufzählung, kein „…“ am Ende.',
+    '- Details und Belege gehören in die Bullets, nicht in die Zusammenfassung. Die Zusammenfassung verdichtet, sie wiederholt die Bullets nicht.',
     '- Antworte ausschließlich mit gültigem JSON, ohne Markdown-Zäune und ohne Text davor oder danach.',
   ].join('\n');
 
@@ -131,12 +133,12 @@ export function buildNewsPrompt(input: {
     SCHEMA_EXAMPLE,
     '',
     'Inhaltliche Vorgaben:',
-    '- "headline": der wichtigste Zusammenhang des Tages für XAU/USD und Tech, keine Wiederholung der Summary.',
-    '- "today": nur Ereignisse der letzten 24–48 Stunden, Fokus auf das, was heute für Intraday-Handel zählt.',
-    '- "week": die letzten 7 Tage und was diese Woche noch ansteht (Daten, Fed, Earnings).',
-    '- "month": der laufende Monat, welche Themen sich aufbauen.',
-    '- "year": 2026 bisher, welche großen Linien Gold, USD und Tech prägen.',
-    '- "lastYear": 2025 als Rückblick, mit den Wendepunkten, die 2026 erklären.',
+    '- "headline": der wichtigste Zusammenhang des Tages für XAU/USD und Tech — ein vollständiger Satz, keine Wiederholung der Summary.',
+    '- "today": nur Ereignisse der letzten 24–48 Stunden, Fokus auf das, was heute für Intraday-Handel zählt. Summary: erst die Lage, dann die Begründung, dann was heute zählt.',
+    '- "week": die letzten 7 Tage und was diese Woche noch ansteht (Daten, Fed, Earnings). Summary: das Muster der Woche, nicht die Liste der Einzelmeldungen.',
+    '- "month": der laufende Monat, welche Themen sich aufbauen. Summary: der rote Faden des Monats.',
+    '- "year": 2026 bisher, welche großen Linien Gold, USD und Tech prägen. Summary: die großen Linien, keine Chronologie.',
+    '- "lastYear": 2025 als Rückblick, mit den Wendepunkten, die 2026 erklären. Summary: nur die Wendepunkte, die heute noch wirken.',
     '- "outlook": nächste Woche, nächster Monat, bis Jahresende. Jeweils Bias plus eine konkrete Begründung und was die Einschätzung kippen würde.',
     '- "ai": nur KI/Modelle/Infrastruktur-News mit Marktrelevanz, keine Produkt-Hype-Meldungen.',
     '- "marketPulse": vier Karten — Gold, US-Dollar, Tech, Risiko. Kurz und konkret.',

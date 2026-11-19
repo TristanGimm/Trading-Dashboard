@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildFeeds, dedupeItems, parseFeed, type FeedSource, type NewsDigest, type RawNewsItem } from '../lib/news/feeds.ts';
 import { dateInZone, isoWeek, shiftDate, startOfWeek, periodContext } from '../lib/news/dates.ts';
-import { normaliseEdition } from '../lib/news/normalize.ts';
+import { normaliseEdition, asText } from '../lib/news/normalize.ts';
 import { buildNewsPrompt } from '../lib/news/prompt.ts';
 import { quoteLine } from '../lib/news/quotes.ts';
 import { parseDeepSeekJson, DeepSeekError } from '../lib/news/deepseek.ts';
@@ -160,6 +160,38 @@ test('normalisation resolves only real citations and fills every required sectio
   assert.equal(edition.watchlist[0].symbol, 'NVDA');
   assert.ok(edition.sources.length >= 2);
   assert.deepEqual(edition.meta.failedFeeds, ['Broken feed: timeout']);
+});
+
+test('over-long model text is cut at a sentence end, never mid-word', () => {
+  const sentence = 'Der Dollar bleibt der entscheidende Gegenspieler für Gold und bremst jede Erholung.';
+  const long = `${sentence} `.repeat(12).trim();
+  const clamped = asText(long, 200);
+  assert.ok(clamped.length <= 202, `expected <= 202 chars, got ${clamped.length}`);
+  assert.ok(/[.!?…]$/.test(clamped), `clamped text must end on a boundary: ${clamped}`);
+  assert.equal(asText('Kurz und vollständig.', 200), 'Kurz und vollständig.');
+  assert.equal(asText('  Mehrfache   Abstände  ', 200), 'Mehrfache Abstände');
+});
+
+test('a complete section summary beyond 400 characters survives normalisation', () => {
+  const summary = [
+    'Die Woche stand zunächst unter dem Eindruck der Fed-Protokolle und einer neuen 50-Bp-Forderung aus dem Offenmarktausschuss.',
+    'Gold verlor dadurch den Halt unter 3.800, während der Dollar auf 103,9 stieg und die Renditekurve steiler wurde.',
+    'Zum Wochenende beruhigte sich der Markt etwas, weil die Dezember-Erwartung bereits vollständig eingepreist ist.',
+    'Für die kommenden Tage zählt, ob die 10-Jahres-Rendite über 5 % bleibt und ob Gold die 3.750 zurückerobert.',
+  ].join(' ');
+  assert.ok(summary.length > 400 && summary.length < 900, `fixture must exceed the old 400-char cap, got ${summary.length}`);
+  const digest: NewsDigest = {
+    items: [], byCategory: { gold: [], macro: [], markets: [], tech: [], ai: [], watchlist: [], general: [], year2026: [], lastYear: [] },
+    fetchedAt: now.toISOString(), feedCount: 0, failedFeeds: [], coverage: { today: 0, week: 0, month: 0, year: 0, lastYear: 0 },
+  };
+  const edition = normaliseEdition({
+    headline: 'Gold sucht eine Basis',
+    today: { summary: 'Gold stabilisiert sich, der Dollar bleibt stark.', bullets: [] },
+    week: { summary, bullets: [] },
+  }, {
+    date: '2026-11-18', digest, quotes: [], model: 'deepseek-test', generatedAt: '2026-11-18T09:10:00Z',
+  });
+  assert.equal(edition.week.summary, summary);
 });
 
 test('normalisation refuses an answer without a usable daily section', () => {

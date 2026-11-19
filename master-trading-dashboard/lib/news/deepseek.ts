@@ -130,7 +130,7 @@ export async function callDeepSeek(system: string, user: string): Promise<DeepSe
             { role: 'user', content: user },
           ],
           temperature: 0.32,
-          max_tokens: 6000,
+          max_tokens: 8000,
           response_format: { type: 'json_object' },
           stream: false,
         }),

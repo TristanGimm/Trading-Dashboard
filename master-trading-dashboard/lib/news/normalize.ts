@@ -17,15 +17,35 @@ function array(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
+/** Cut over-long text at the last complete sentence that fits, never in the
+ *  middle of a word. The remainder is marked with an ellipsis so a shorter
+ *  text is visibly shorter instead of looking like a broken sentence. */
+function clampText(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const window = text.slice(0, max);
+  const sentenceEnds = ['.', '!', '?']
+    .map(mark => window.lastIndexOf(`${mark} `))
+    .filter(index => index >= 0);
+  const sentenceEnd = sentenceEnds.length ? Math.max(...sentenceEnds) : -1;
+  // Keep a complete sentence only when it retains most of the budget;
+  // otherwise fall back to the last word boundary before the limit.
+  if (sentenceEnd >= Math.floor(max * 0.55)) {
+    return `${window.slice(0, sentenceEnd + 1).trim()} …`;
+  }
+  const space = window.lastIndexOf(' ');
+  const head = (space > 0 ? window.slice(0, space) : window).trim();
+  return `${head} …`;
+}
+
 /** Model output is untrusted text: strip control characters, collapse
- *  whitespace and cap length before it reaches the database or the DOM. */
+ *  whitespace and bound length before it reaches the database or the DOM. */
 export function asText(value: unknown, max: number): string {
   if (typeof value !== 'string') return '';
-  return value
+  const text = value
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, max);
+    .trim();
+  return clampText(text, max);
 }
 
 export function asImpact(value: unknown): NewsImpact {
@@ -72,7 +92,7 @@ function asSection(value: unknown, lookup: Map<string, NewsRef>, maxBullets: num
   const bullets: NewsBullet[] = [];
   for (const entry of array(raw.bullets)) {
     const bullet = record(entry);
-    const text = asText(bullet.text, 220);
+    const text = asText(bullet.text, 320);
     if (!text) continue;
     bullets.push({
       text,
@@ -92,7 +112,7 @@ function asPulse(value: unknown): NewsPulse[] {
     const pulse = record(entry);
     const label = asText(pulse.label, 24);
     if (!label) continue;
-    pulses.push({ label, stance: asImpact(pulse.stance ?? pulse.impact), note: asText(pulse.note, 140) });
+    pulses.push({ label, stance: asImpact(pulse.stance ?? pulse.impact), note: asText(pulse.note, 200) });
     if (pulses.length >= 4) break;
   }
   while (pulses.length < 4) {
@@ -107,7 +127,7 @@ function asOutlook(value: unknown): NewsOutlook[] {
   for (const entry of array(value)) {
     const row = record(entry);
     const horizon = asText(row.horizon ?? row.label, 32);
-    const summary = asText(row.summary, 360);
+    const summary = asText(row.summary, 600);
     if (!horizon || !summary) continue;
     outlook.push({ horizon, bias: asImpact(row.bias ?? row.impact), summary });
     if (outlook.length >= 3) break;
@@ -126,9 +146,9 @@ function asMovers(value: unknown): NewsMover[] {
   const movers: NewsMover[] = [];
   for (const entry of array(value)) {
     const row = record(entry);
-    const title = asText(row.title, 100);
+    const title = asText(row.title, 120);
     if (!title) continue;
-    movers.push({ title, detail: asText(row.detail, 200), impact: asImpact(row.impact) });
+    movers.push({ title, detail: asText(row.detail, 260), impact: asImpact(row.impact) });
     if (movers.length >= 4) break;
   }
   return movers;
@@ -150,7 +170,7 @@ function asWatchlist(value: unknown): NewsWatchItem[] {
       symbol: known.symbol,
       name: known.name,
       sentiment: asImpact(row.sentiment ?? row.impact),
-      note: asText(row.note, 140),
+      note: asText(row.note, 200),
     });
     if (items.length >= 12) break;
   }
@@ -176,17 +196,17 @@ export function normaliseEdition(raw: unknown, context: NormaliseContext): NewsE
   const nested = record(root.sections);
   const sectionSource = Object.keys(nested).length ? nested : root;
   const lookup = makeRefLookup(context.digest);
-  const today = asSection(sectionSource.today ?? root.today, lookup, 4, 480);
+  const today = asSection(sectionSource.today ?? root.today, lookup, 4, 700);
 
   if (!today.summary && today.bullets.length === 0) {
     throw new Error('Die KI-Antwort enthielt kein verwertbares Tagesbriefing.');
   }
 
-  const week = asSection(sectionSource.week ?? root.week, lookup, 3, 400);
-  const month = asSection(sectionSource.month ?? root.month, lookup, 3, 400);
-  const year = asSection(sectionSource.year ?? root.year, lookup, 4, 520);
-  const lastYear = asSection(sectionSource.lastYear ?? sectionSource.last_year ?? root.lastYear, lookup, 4, 520);
-  const ai = asSection(sectionSource.ai ?? root.ai, lookup, 3, 400);
+  const week = asSection(sectionSource.week ?? root.week, lookup, 3, 900);
+  const month = asSection(sectionSource.month ?? root.month, lookup, 3, 900);
+  const year = asSection(sectionSource.year ?? root.year, lookup, 4, 900);
+  const lastYear = asSection(sectionSource.lastYear ?? sectionSource.last_year ?? root.lastYear, lookup, 4, 900);
+  const ai = asSection(sectionSource.ai ?? root.ai, lookup, 3, 900);
 
   const refs: NewsRef[] = [];
   const seen = new Set<string>();
@@ -211,7 +231,7 @@ export function normaliseEdition(raw: unknown, context: NormaliseContext): NewsE
   const edition: NewsEditionPayload = {
     version: 1,
     date: context.date,
-    headline: asText(root.headline, 160) || 'Tagesbriefing für Gold, Tech und KI',
+    headline: asText(root.headline, 220) || 'Tagesbriefing für Gold, Tech und KI',
     marketPulse: asPulse(root.marketPulse ?? root.market_pulse),
     today,
     week,
