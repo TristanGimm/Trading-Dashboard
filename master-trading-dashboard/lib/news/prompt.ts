@@ -25,6 +25,8 @@ export const WATCHLIST = [
   { symbol: 'SPACEX', name: 'SpaceX (privat)' },
 ];
 
+const BULLET_SHAPE = `{"text": "max. 26 Wörter, vollständiger Satz", "impact": "bullish|bearish|neutral", "assets": ["XAU/USD"], "refs": ["S1", "S2"]}`;
+
 const SCHEMA_EXAMPLE = `{
   "headline": "Ein vollständiger Satz, max. 18 Wörter, der den Handelstag auf den Punkt bringt",
   "marketPulse": [
@@ -34,21 +36,57 @@ const SCHEMA_EXAMPLE = `{
     {"label": "Risiko", "stance": "bullish|bearish|neutral", "note": "max. 18 Wörter, vollständiger Satz"}
   ],
   "today": {
-    "summary": "3 vollständige Sätze, max. 70 Wörter",
+    "summary": "2–3 vollständige Sätze, max. 55 Wörter",
     "bullets": [
-      {"text": "max. 30 Wörter, vollständiger Satz", "impact": "bullish|bearish|neutral", "assets": ["XAU/USD"], "refs": ["S1", "S2"]}
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE}
     ]
   },
-  "week": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
-  "month": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
-  "year": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
-  "lastYear": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
+  "week": {
+    "summary": "2–3 vollständige Sätze, max. 55 Wörter",
+    "bullets": [
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE}
+    ]
+  },
+  "month": {
+    "summary": "2–3 vollständige Sätze, max. 55 Wörter",
+    "bullets": [
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE}
+    ]
+  },
+  "year": {
+    "summary": "2–3 vollständige Sätze, max. 55 Wörter",
+    "bullets": [
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE}
+    ]
+  },
+  "lastYear": {
+    "summary": "2–3 vollständige Sätze, max. 55 Wörter",
+    "bullets": [
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE}
+    ]
+  },
   "outlook": [
-    {"horizon": "Nächste Woche", "bias": "bullish|bearish|neutral", "summary": "2 vollständige Sätze, max. 60 Wörter"},
-    {"horizon": "Nächster Monat", "bias": "bullish|bearish|neutral", "summary": "2 vollständige Sätze, max. 60 Wörter"},
-    {"horizon": "Bis Jahresende", "bias": "bullish|bearish|neutral", "summary": "2 vollständige Sätze, max. 60 Wörter"}
+    {"horizon": "Nächste Woche", "bias": "bullish|bearish|neutral", "summary": "2 vollständige Sätze, max. 50 Wörter"},
+    {"horizon": "Nächster Monat", "bias": "bullish|bearish|neutral", "summary": "2 vollständige Sätze, max. 50 Wörter"},
+    {"horizon": "Bis Jahresende", "bias": "bullish|bearish|neutral", "summary": "2 vollständige Sätze, max. 50 Wörter"}
   ],
-  "ai": {"summary": "3–4 vollständige Sätze, max. 90 Wörter", "bullets": []},
+  "ai": {
+    "summary": "2–3 vollständige Sätze, max. 55 Wörter",
+    "bullets": [
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE},
+      ${BULLET_SHAPE}
+    ]
+  },
   "movers": [
     {"title": "max. 10 Wörter", "detail": "max. 25 Wörter, vollständiger Satz", "impact": "bullish|bearish|neutral"}
   ],
@@ -81,7 +119,9 @@ export function buildNewsPrompt(input: {
     '- Jede Zahl muss wörtlich in einer Schlagzeile, einer Zusammenfassung oder der Marktlage vorkommen. Leite keine Kursstände aus „Rekord“ oder „Crash“ ab; schreibe dann „auf Rekordniveau“.',
     '- Halte die Längen ein. Lieber eine scharfe Beobachtung als drei allgemeine Sätze.',
     '- Jede Zusammenfassung ist ein in sich geschlossener Text: Leitsatz zuerst, dann höchstens zwei stützende Sätze. Kein Satz darf abgeschnitten sein, keine offene Aufzählung, kein „…“ am Ende.',
-    '- Details und Belege gehören in die Bullets, nicht in die Zusammenfassung. Die Zusammenfassung verdichtet, sie wiederholt die Bullets nicht.',
+    '- Jeder Abschnitt (today, week, month, year, lastYear, ai) enthält 2–3 Bullets. Ein Abschnitt ohne Bullets gilt als unvollständig.',
+    '- Jeder Bullet trägt eine Bewertung: "impact" ist Pflicht und bezieht sich auf das zuerst genannte Asset — bearish = belastend, bullish = stützend, neutral = gemischt. Dazu die betroffenen "assets" und die "refs".',
+    '- Die Bullets tragen die Einzelbeobachtungen, die Zusammenfassung nur den Zusammenhang. Beide wiederholen sich nicht.',
     '- Antworte ausschließlich mit gültigem JSON, ohne Markdown-Zäune und ohne Text davor oder danach.',
   ].join('\n');
 

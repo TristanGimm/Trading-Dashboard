@@ -3213,7 +3213,10 @@ textarea.fact-input { resize: vertical; min-height: 70px; }
    Newsroom: one briefing per day, built from public feeds and read at a
    glance. Dense where it matters (pulse, bullets) and quiet everywhere else.
    --------------------------------------------------------------------------- */
-.news-page { max-width: 1500px; }
+/* The briefing uses whatever width the workspace gives it. Capping it would
+   centre a narrow column on a wide display while every other page fills the
+   frame. */
+.news-page { max-width: none; }
 .news-heading .eyebrow { color: var(--accent-ink); }
 .news-toolbar {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;

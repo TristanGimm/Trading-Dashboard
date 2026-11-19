@@ -194,6 +194,26 @@ test('a complete section summary beyond 400 characters survives normalisation', 
   assert.equal(edition.week.summary, summary);
 });
 
+test('the prompt requires rated bullets in every section, not just prose', () => {
+  const digest: NewsDigest = {
+    items: [], byCategory: { gold: [], macro: [], markets: [], tech: [], ai: [], watchlist: [], general: [], year2026: [], lastYear: [] },
+    fetchedAt: now.toISOString(), feedCount: 0, failedFeeds: [], coverage: { today: 0, week: 0, month: 0, year: 0, lastYear: 0 },
+  };
+  const prompt = buildNewsPrompt({ date: '2026-11-18', timeZone: 'Europe/Berlin', digest, quotes: [] });
+  // An empty array in the schema example is read as "this section has no
+  // bullets", which is how the rating badges disappeared from the page.
+  assert.ok(!/"bullets"\s*:\s*\[\s*\]/.test(prompt.user), 'no section may be specified with an empty bullet list');
+  for (const section of ['today', 'week', 'month', 'year', 'lastYear', 'ai']) {
+    const start = prompt.user.indexOf(`"${section}": {`);
+    assert.ok(start >= 0, `schema must describe ${section}`);
+    const block = prompt.user.slice(start, start + 900);
+    assert.match(block, /"bullets": \[/, `${section} must ask for bullets`);
+    assert.match(block, /"impact": "bullish\|bearish\|neutral"/, `${section} bullets must carry an impact rating`);
+    assert.match(block, /"assets": \[/, `${section} bullets must name the assets they move`);
+  }
+  assert.match(prompt.system, /Bullets\. Ein Abschnitt ohne Bullets gilt als unvollständig/);
+});
+
 test('normalisation refuses an answer without a usable daily section', () => {
   const digest: NewsDigest = {
     items: [], byCategory: { gold: [], macro: [], markets: [], tech: [], ai: [], watchlist: [], general: [], year2026: [], lastYear: [] },
