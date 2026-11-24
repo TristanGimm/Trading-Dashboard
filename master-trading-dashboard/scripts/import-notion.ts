@@ -225,7 +225,7 @@ export async function importTradesFromCsv(path: string, options: { dryRun?: bool
       accountBalance: numberOrNull(cell(row, 'Account Balance')),
       rMultiple: numberOrNull(cell(row, 'R')),
       setup: splitList(cell(row, 'Setup')),
-      tfType: splitList(cell(row, 'TF Type')),
+      tfType: splitList(cell(row, 'TF Shift Type', 'TF Type')),
       algorithm: splitList(cell(row, 'Algorithm')),
       sessionTime: splitList(cell(row, 'Session Time')),
       liquiditySweep: cell(row, 'Liquidity Sweep').toLowerCase() === 'yes',

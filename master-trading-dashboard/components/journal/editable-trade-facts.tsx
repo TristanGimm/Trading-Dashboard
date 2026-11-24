@@ -18,9 +18,12 @@ import {
   SESSION_OPTIONS,
   SETUP_OPTIONS,
   TF_ALIGN_OPTIONS,
+  TF_SHIFT_TYPE_OPTIONS,
+  withStored,
 } from '@/lib/trade-options';
 import { ChoiceChips } from '@/components/journal/choice-field';
 import { QualityBadge } from '@/components/quality-badge';
+import { TimeframeTag } from '@/components/journal/tags';
 import { cn } from '@/lib/utils';
 
 type FieldKind = 'text' | 'list' | 'number' | 'select' | 'datetime' | 'textarea' | 'computed';
@@ -28,7 +31,7 @@ type FieldKind = 'text' | 'list' | 'number' | 'select' | 'datetime' | 'textarea'
 type FieldKey =
   | 'dateTime' | 'exitTime' | 'account' | 'pair' | 'position' | 'netEur'
   | 'setup' | 'setupQuality' | 'algorithm' | 'sessionTime' | 'marketCondition'
-  | 'entryTf' | 'tfAlign' | 'orderType' | 'rMultiple' | 'pnlPercent' | 'lotSize'
+  | 'entryTf' | 'tfAlign' | 'tfType' | 'orderType' | 'rMultiple' | 'pnlPercent' | 'lotSize'
   | 'accountBalance' | 'mfe30m' | 'mae30m' | 'recordedOutcome' | 'outcomeTag' | 'learning';
 
 type Field = {
@@ -39,6 +42,8 @@ type Field = {
   options?: { value: string; label: string }[];
   /** Fixed vocabulary for a multi-value chip field. */
   choices?: string[];
+  /** Accept free values in addition to the fixed vocabulary. */
+  allowCustom?: boolean;
   value: (trade: Trade, timeZone: string) => string;
   display: (trade: Trade, timeZone: string) => ReactNode;
   parse: (value: string, timeZone: string) => unknown;
@@ -166,6 +171,15 @@ const FIELDS: Field[] = [
     parse: value => splitList(value),
   },
   {
+    key: 'tfType', label: 'TF Shift Type', kind: 'list', apiKey: 'tfType',
+    choices: TF_SHIFT_TYPE_OPTIONS, allowCustom: true,
+    value: trade => trade.tfType.join(', '),
+    display: trade => trade.tfType.length
+      ? <span className="tag-stack">{trade.tfType.map(value => <TimeframeTag key={value} value={value}/>)}</span>
+      : missing,
+    parse: value => splitList(value),
+  },
+  {
     key: 'orderType', label: 'Order type', kind: 'select', apiKey: 'orderType',
     options: [{ value: '', label: 'Unrecorded' }, ...ORDER_TYPE_OPTIONS.map(value => ({ value, label: value }))],
     value: trade => trade.orderType ?? '',
@@ -237,12 +251,14 @@ const FIELDS: Field[] = [
  * press Enter or the check mark. The PATCH is field-scoped, so two quick edits
  * cannot overwrite each other with a stale copy of the trade.
  */
-export function EditableTradeFacts({ trade: initial, timeZone, variant = 'panel', exclude = [], onTradeChange }: {
+export function EditableTradeFacts({ trade: initial, timeZone, variant = 'panel', exclude = [], onTradeChange, tfTypeChoices = [] }: {
   trade: Trade;
   timeZone: string;
   variant?: 'panel' | 'dialog';
   exclude?: FieldKey[];
   onTradeChange?: (trade: Trade) => void;
+  /** TF shift types already used across the journal, offered alongside the ladder. */
+  tfTypeChoices?: string[];
 }) {
   const router = useRouter();
   const [trade, setTrade] = useState(initial);
@@ -271,6 +287,7 @@ export function EditableTradeFacts({ trade: initial, timeZone, variant = 'panel'
   }, [editing]);
 
   const fields = FIELDS.filter(field => !exclude.includes(field.key));
+  const tfTypeOptions = withStored(TF_SHIFT_TYPE_OPTIONS, tfTypeChoices);
 
   const start = (field: Field) => {
     editor.current = null;
@@ -332,7 +349,13 @@ export function EditableTradeFacts({ trade: initial, timeZone, variant = 'panel'
               ? <div className="fact-computed"><span className="fact-value-text">{field.display(trade, timeZone)}</span><span className="fact-derived">auto</span></div>
               : isEditing ? <div className={cn('fact-editor', field.kind === 'list' && 'fact-editor-choices')}>
                 {field.kind === 'list'
-                  ? <ChoiceChips label={field.label} options={field.choices ?? []} values={splitList(draft)} onChange={next => setDraft(next.join(', '))}/>
+                  ? <ChoiceChips
+                      label={field.label}
+                      options={field.key === 'tfType' ? tfTypeOptions : field.choices ?? []}
+                      values={splitList(draft)}
+                      allowCustom={field.allowCustom}
+                      onChange={next => setDraft(next.join(', '))}
+                    />
                   : field.kind === 'select'
                   ? <select
                       ref={element => { editor.current = element; }}

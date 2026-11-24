@@ -51,6 +51,7 @@ test('CSV quotes multiline data and neutralizes spreadsheet formulas without cor
   // Net EUR, PnL %, account balance (both empty), R multiple
   assert.ok(csv.includes(',-20,"","",1,'), 'net P&L and R multiple keep their positions');
   assert.ok(csv.includes('Learning')); assert.ok(csv.includes('Setup Quality'));
+  assert.ok(csv.includes('TF Shift Type'), 'the exported header uses the field name shown in the app');
   assert.equal(tradesToCsv([]).split('\r\n').length, 1);
 });
 

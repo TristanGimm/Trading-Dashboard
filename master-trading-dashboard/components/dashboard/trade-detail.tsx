@@ -55,7 +55,7 @@ function toNumber(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function TradeDetail({ trade, timeZone, demo, onClose }: { trade: Trade | null; timeZone: string; demo: boolean; onClose: () => void }) {
+export function TradeDetail({ trade, timeZone, demo, onClose, tfTypeChoices = [] }: { trade: Trade | null; timeZone: string; demo: boolean; onClose: () => void; tfTypeChoices?: string[] }) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const [live, setLive] = useState<Trade | null>(trade);
@@ -206,6 +206,7 @@ export function TradeDetail({ trade, timeZone, demo, onClose }: { trade: Trade |
         timeZone={timeZone}
         variant="dialog"
         exclude={['recordedOutcome', 'outcomeTag', 'setupQuality', 'netEur', 'pnlPercent', 'rMultiple', 'lotSize']}
+        tfTypeChoices={tfTypeChoices}
         onTradeChange={setLive}
       />
 

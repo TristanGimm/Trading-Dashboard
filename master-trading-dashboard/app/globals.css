@@ -2139,6 +2139,23 @@ body { color:inherit; }
 .choice-chip:hover { color: var(--foreground); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, var(--control)); }
 .choice-chip.is-selected { color: var(--heading); background: color-mix(in srgb, var(--accent) 20%, var(--control)); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent); }
 .choice-chip.is-selected::before { content: '✓'; margin-right: 5px; color: var(--accent); font-size: 9px; font-weight: 700; }
+/* Free value for pickers that must accept a shift the ladder does not list. */
+.choice-custom { display: inline-flex; align-items: center; gap: 4px; }
+.choice-custom-input {
+  width: 118px; min-height: 27px; padding: 4px 9px; border: 1px dashed color-mix(in srgb, var(--accent) 35%, var(--line));
+  border-radius: 999px; background: transparent; color: var(--foreground); font: inherit; font-size: 10px;
+}
+.choice-custom-input::placeholder { color: var(--muted); }
+.choice-custom-input:focus {
+  outline: none; border-style: solid; border-color: var(--accent); background: var(--panel);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.choice-custom-add {
+  display: grid; place-items: center; width: 27px; height: 27px; padding: 0; flex-shrink: 0;
+  border: 1px solid var(--line); border-radius: 50%; background: var(--control); color: var(--muted);
+}
+.choice-custom-add:hover:not(:disabled) { color: var(--heading); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 10%, var(--control)); }
+.choice-custom-add:disabled { opacity: .4; cursor: default; }
 .fact-editor-choices { flex-wrap: wrap; }
 .fact-editor-choices .choice-grid { flex: 1; }
 .fact-computed { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }

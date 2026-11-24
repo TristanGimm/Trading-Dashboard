@@ -6,7 +6,7 @@ import type { Trade } from './types';
 import { deleteUpload } from './uploads';
 import { ensureTradePage, updatePage } from './workspace';
 
-const textList = z.array(z.string().trim().min(1).max(80)).max(30);
+const textList = z.array(z.string().trim().min(1).max(80)).max(60);
 const nullableText = (max: number) => z.string().trim().max(max).nullable();
 
 export const tradeInputSchema = z.object({

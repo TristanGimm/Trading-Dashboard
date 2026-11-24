@@ -254,6 +254,15 @@ export async function listTrades(filter: TradeFilter = {}): Promise<Trade[]> {
   return attachScreenshots(result.rows.map(mapTradeRow));
 }
 
+/** Every TF shift type the journal already contains, for the picker. */
+export async function listTfShiftTypes(): Promise<string[]> {
+  await ensureSchema();
+  const result = await getPool().query(
+    `SELECT DISTINCT value FROM trades CROSS JOIN LATERAL unnest(tf_type) AS value WHERE value <> '' ORDER BY value`,
+  );
+  return result.rows.map(row => String(row.value));
+}
+
 export async function getTrade(id: string): Promise<Trade | null> {
   await ensureSchema();
   const result = await getPool().query(`SELECT ${tradeColumns} FROM trades WHERE id=$1`, [id]);

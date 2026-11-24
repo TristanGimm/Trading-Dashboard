@@ -87,12 +87,23 @@ export const ENTRY_TIMEFRAME_OPTIONS: string[] = ['5s', '1m', '5m', '15m', '30m'
 export const TF_ALIGN_OPTIONS: string[] = ['5s', '1m', '5m', '15m', '30m', '1h', '4h'];
 
 /**
- * "1m Type 3" is the journal's existing spelling for an entry timeframe with
- * its setup type. Generating the ladder keeps every combination selectable
- * without inventing a second vocabulary.
+ * The trade's timeframe plus the shift type that was traded, in the journal's
+ * existing spelling ("1m Type 3"). The ladder is only a convenience: the
+ * picker also accepts free values, so a shift the ladder does not know about
+ * can still be recorded and stays selectable afterwards.
  */
-export const TF_TYPE_OPTIONS: string[] = ['5s', '1m', '5m', '15m', '30m', '1hr', '4hr']
+export const TF_SHIFT_TIMEFRAMES: string[] = ['5s', '1m', '5m', '15m', '30m', '1hr', '4hr'];
+
+export const TF_SHIFT_TYPE_OPTIONS: string[] = TF_SHIFT_TIMEFRAMES
   .flatMap(timeframe => ['Type 1', 'Type 2', 'Type 3'].map(type => `${timeframe} ${type}`));
+
+/** Normalise a value the trader typed into the picker. */
+export function customOption(value: string, available: string[]): string | null {
+  const text = value.trim().replace(/\s+/g, ' ');
+  if (!text) return null;
+  const known = available.find(option => option.toLocaleLowerCase() === text.toLocaleLowerCase());
+  return (known ?? text).slice(0, 80);
+}
 
 /** Merge a stored value into a fixed option list so old rows stay editable. */
 export function withStored(options: string[], values: string[]): string[] {

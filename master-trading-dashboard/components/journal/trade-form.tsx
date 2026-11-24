@@ -20,8 +20,9 @@ import {
   SESSION_OPTIONS,
   SETUP_OPTIONS,
   TF_ALIGN_OPTIONS,
-  TF_TYPE_OPTIONS,
+  TF_SHIFT_TYPE_OPTIONS,
   withCurrentValue,
+  withStored,
 } from '@/lib/trade-options';
 import { ChoiceField } from '@/components/journal/choice-field';
 import { ScreenshotField, imagesFromClipboard, screenshotValidationError, type PendingScreenshot } from '@/components/journal/screenshot-field';
@@ -109,7 +110,7 @@ function previewNumber(value: string): number | null {
   return Number.isFinite(number) ? number : null;
 }
 
-export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: string; now: string }) {
+export function TradeForm({ trade, timeZone, now, tfTypeOptions = [] }: { trade?: Trade; timeZone: string; now: string; tfTypeOptions?: string[] }) {
   const router = useRouter();
   const mode = trade ? 'edit' : 'create';
   const [form, setForm] = useState<FormState>(() => initialState(trade, timeZone, now));
@@ -136,6 +137,9 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
   const qualityOptions = withCurrentValue([...QUALITY_TIERS], form.setupQuality);
   const orderTypeOptions = withCurrentValue(ORDER_TYPE_OPTIONS, form.orderType);
   const outcomeTagOptions = withCurrentValue(OUTCOME_TAG_OPTIONS, form.outcomeTag);
+  // Every TF shift type already recorded in the journal stays pickable, so a
+  // custom value entered once is available for later trades too.
+  const tfShiftTypeOptions = withStored(TF_SHIFT_TYPE_OPTIONS, tfTypeOptions);
 
   const addScreenshots = (files: File[]) => {
     if (pending) return;
@@ -342,7 +346,7 @@ export function TradeForm({ trade, timeZone, now }: { trade?: Trade; timeZone: s
         <ChoiceField className="field-wide" label="Market condition" options={MARKET_CONDITION_OPTIONS} values={form.marketCondition} onChange={values => update('marketCondition', values)}/>
         <ChoiceField className="field-wide" label="Entry TF" options={ENTRY_TIMEFRAME_OPTIONS} values={form.entryTf} onChange={values => update('entryTf', values)}/>
         <ChoiceField className="field-wide" label="TF align" options={TF_ALIGN_OPTIONS} values={form.tfAlign} onChange={values => update('tfAlign', values)}/>
-        <ChoiceField className="field-wide" label="TF type" options={TF_TYPE_OPTIONS} values={form.tfType} onChange={values => update('tfType', values)} hint="The entry timeframe and its setup type."/>
+        <ChoiceField className="field-wide" label="TF Shift Type" options={tfShiftTypeOptions} values={form.tfType} onChange={values => update('tfType', values)} allowCustom hint="The entry timeframe and the shift type that was traded. Use Add value… for a combination the ladder does not list."/>
         <ChoiceField className="field-wide" label="Algorithm" options={ALGORITHM_OPTIONS} values={form.algorithm} onChange={values => update('algorithm', values)}/>
         <label className="field"><span>Setup quality</span><select className="form-input" value={form.setupQuality} onChange={event => update('setupQuality', event.target.value)}><option value="">Unrated</option>{qualityOptions.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
         <label className="field"><span>Order type</span><select className="form-input" value={form.orderType} onChange={event => update('orderType', event.target.value)}><option value="">Unrecorded</option>{orderTypeOptions.map(value => <option key={value} value={value}>{value}</option>)}</select></label>

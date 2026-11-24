@@ -38,6 +38,7 @@ export function Dashboard({ data, loadError }: { data: DashboardPayload; loadErr
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({ pair: 'all', setup: 'all', session: 'all', outcome: 'all', from: '', to: '' });
+  const tfTypeChoices = useMemo(() => [...new Set(data.trades.flatMap(trade => trade.tfType))].sort(), [data.trades]);
   const filterOptions = useMemo(() => ({ pairs: [...new Set(data.trades.flatMap(trade => trade.pair ? [trade.pair] : []))].sort(), setups: [...new Set(data.trades.flatMap(trade => trade.setup))].sort(), sessions: [...new Set(data.trades.flatMap(trade => trade.sessionTime))].sort() }), [data.trades]);
   const allDays = useMemo(() => groupTradingDays(data.trades, data.timeZone), [data.trades, data.timeZone]);
   const tradeDates = useMemo(() => new Map(allDays.flatMap(day => day.trades.map(trade => [trade.id, day.date] as const))), [allDays]);
@@ -107,6 +108,6 @@ export function Dashboard({ data, loadError }: { data: DashboardPayload; loadErr
     </>}
   </div>
   <footer className="dashboard-footer"><span>Trading Dashboard</span><span>Local data · {data.timeZone}</span></footer>
-  <TradeDetail trade={selectedTrade} timeZone={data.timeZone} demo={data.demo} onClose={() => setSelectedTrade(null)}/>
+  <TradeDetail trade={selectedTrade} timeZone={data.timeZone} demo={data.demo} tfTypeChoices={tfTypeChoices} onClose={() => setSelectedTrade(null)}/>
   </div>;
 }

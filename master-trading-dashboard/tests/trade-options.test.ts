@@ -12,7 +12,8 @@ import {
   SESSION_OPTIONS,
   SETUP_OPTIONS,
   TF_ALIGN_OPTIONS,
-  TF_TYPE_OPTIONS,
+  TF_SHIFT_TYPE_OPTIONS,
+  customOption,
   withCurrentValue,
   withStored,
 } from '../lib/trade-options.ts';
@@ -41,7 +42,7 @@ test('pickable vocabularies are unique, non-empty and cover the recorded journal
     outcomeTags: OUTCOME_TAG_OPTIONS,
     entryTimeframes: ENTRY_TIMEFRAME_OPTIONS,
     tfAlign: TF_ALIGN_OPTIONS,
-    tfTypes: TF_TYPE_OPTIONS,
+    tfShiftTypes: TF_SHIFT_TYPE_OPTIONS,
   };
   for (const [name, list] of Object.entries(lists)) {
     assert.ok(list.length > 0, `${name} is empty`);
@@ -58,8 +59,16 @@ test('pickable vocabularies are unique, non-empty and cover the recorded journal
   for (const condition of ['Bearish Ranging', 'Bullish Ranging', 'Ranging']) {
     assert.ok(MARKET_CONDITION_OPTIONS.includes(condition), `condition ${condition} is missing`);
   }
-  assert.ok(TF_TYPE_OPTIONS.includes('1m Type 3'));
-  assert.ok(TF_TYPE_OPTIONS.includes('4hr Type 3'));
+  assert.ok(TF_SHIFT_TYPE_OPTIONS.includes('1m Type 3'));
+  assert.ok(TF_SHIFT_TYPE_OPTIONS.includes('1hr Type 3'));
+  assert.ok(TF_SHIFT_TYPE_OPTIONS.includes('4hr Type 3'));
+});
+
+test('custom TF shift types are normalised and never duplicate a known value', () => {
+  assert.equal(customOption('  2m   Type 1 ', TF_SHIFT_TYPE_OPTIONS), '2m Type 1');
+  assert.equal(customOption('1m type 3', TF_SHIFT_TYPE_OPTIONS), '1m Type 3');
+  assert.equal(customOption('', TF_SHIFT_TYPE_OPTIONS), null);
+  assert.equal(customOption('x'.repeat(120), TF_SHIFT_TYPE_OPTIONS)?.length, 80);
 });
 
 test('stored values outside the vocabulary stay editable', () => {

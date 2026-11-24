@@ -85,7 +85,7 @@ const columns: Column[] = [
   { id: 'condition', label: 'Market Condition', default: true, render: trade => (trade.marketCondition ?? []).length ? <span className="tag-stack">{(trade.marketCondition ?? []).map(value => <ConditionTag key={value} value={value}/>)}</span> : dash },
   { id: 'confluences', label: 'Confluences', default: true, render: trade => <ConfluenceToggles trade={trade}/> },
   { id: 'entryTf', label: 'Entry TF', default: true, render: trade => timeframeList(trade.entryTf) },
-  { id: 'tfType', label: 'TF Type', default: true, render: trade => timeframeList(trade.tfType) },
+  { id: 'tfType', label: 'TF Shift Type', default: true, render: trade => timeframeList(trade.tfType) },
   { id: 'tfAlign', label: 'TF Align', default: true, render: trade => timeframeList(trade.tfAlign) },
   { id: 'session', label: 'Session', default: true, render: trade => trade.sessionTime.length ? <span className="tag-stack">{trade.sessionTime.map(value => <SessionTag key={value} value={value}/>)}</span> : dash },
   { id: 'outcome', label: 'Outcome', default: true, render: trade => { const value = outcomeOf(trade); return <span className={`trade-tag outcome-${value}`}>{trade.outcomeTag || value}</span>; } },
@@ -243,8 +243,8 @@ export function TradeJournal({ trades, timeZone, onTrade, demo = false }: { trad
           <select className="select-control" aria-label="Algorithm" value={filters.algorithm} onChange={event => update({ algorithm: event.target.value })}>
             <option value="all">All algorithms</option>{options.algorithms.map(algorithm => <option key={algorithm}>{algorithm}</option>)}
           </select>
-          <select className="select-control" aria-label="Timeframe" value={filters.tfType} onChange={event => update({ tfType: event.target.value })}>
-            <option value="all">All timeframes</option>{options.timeframes.map(tf => <option key={tf}>{tf}</option>)}
+          <select className="select-control" aria-label="TF Shift Type" value={filters.tfType} onChange={event => update({ tfType: event.target.value })}>
+            <option value="all">All TF shift types</option>{options.timeframes.map(tf => <option key={tf}>{tf}</option>)}
           </select>
           <select className="select-control" aria-label="Direction" value={filters.direction} onChange={event => update({ direction: event.target.value })}>
             <option value="all">All directions</option><option value="Long">Long</option><option value="Short">Short</option>

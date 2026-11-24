@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { requireSession } from '@/lib/auth';
 import { getDashboardTimezone } from '@/lib/timezone';
-import { getTrade } from '@/lib/db';
+import { getTrade, listTfShiftTypes } from '@/lib/db';
 import { TradeForm } from '@/components/journal/trade-form';
 
 export const dynamic = 'force-dynamic';
@@ -14,11 +14,12 @@ export default async function EditTradePage({ params }: { params: Promise<{ id: 
   const trade = await getTrade(id);
   if (!trade) notFound();
   const timeZone = getDashboardTimezone(process.env.DASHBOARD_TIMEZONE);
+  const tfTypeOptions = await listTfShiftTypes();
   return <>
     <div className="page-heading">
       <div><div className="eyebrow">JOURNAL / EDIT TRADE</div><h1>Edit trade #{trade.tradeId}.</h1><p>Update the recorded properties. Notes and screenshots live on the trade page.</p></div>
       <div className="heading-actions"><Link className="button" href={`/journal/${trade.id}`}><ArrowLeft size={13}/>Back to trade</Link></div>
     </div>
-    <section className="panel trade-form-panel"><div className="panel-content"><TradeForm trade={trade} timeZone={timeZone} now={new Date().toISOString()}/></div></section>
+    <section className="panel trade-form-panel"><div className="panel-content"><TradeForm trade={trade} timeZone={timeZone} now={new Date().toISOString()} tfTypeOptions={tfTypeOptions}/></div></section>
   </>;
 }

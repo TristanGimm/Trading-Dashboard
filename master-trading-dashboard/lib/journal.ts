@@ -117,7 +117,7 @@ function csvCell(value: string | number | null): string {
 export function tradesToCsv(trades: Trade[]): string {
   const rows: (string | number | null)[][] = [[
     'Trade', 'Entry time (ISO)', 'Exit time (ISO)', 'Time recorded', 'Account', 'Pair', 'Direction',
-    'Setup', 'Setup Quality', 'Algorithm', 'Session', 'Market Condition', 'Entry TF', 'TF Type', 'TF Align',
+    'Setup', 'Setup Quality', 'Algorithm', 'Session', 'Market Condition', 'Entry TF', 'TF Shift Type', 'TF Align',
     'Order Type', 'Lot size', 'Net EUR', 'PnL %', 'Account balance', 'R multiple',
     'Recorded outcome', 'Outcome tag', 'Liquidity Sweep', 'DXY', 'Delta', 'Fractal Shift',
     'MFE (30 min)', 'MAE (30 min)', 'Learning', 'Analysis reference',

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowUpRight, Pencil, Timer } from 'lucide-react';
 import { requireSession } from '@/lib/auth';
 import { getDashboardTimezone } from '@/lib/timezone';
-import { getTrade } from '@/lib/db';
+import { getTrade, listTfShiftTypes } from '@/lib/db';
 import { ensureTradePage, listPageSummaries } from '@/lib/workspace';
 import { recordedOutcome } from '@/lib/execution';
 import { money } from '@/lib/format';
@@ -18,7 +18,7 @@ export default async function TradePage({ params }: { params: Promise<{ id: stri
   await requireSession(`/journal/${id}`);
   const trade = await getTrade(id);
   if (!trade) notFound();
-  const [pages, notes] = await Promise.all([listPageSummaries('page'), ensureTradePage({ id: trade.id, tradeId: trade.tradeId })]);
+  const [pages, notes, tfTypeChoices] = await Promise.all([listPageSummaries('page'), ensureTradePage({ id: trade.id, tradeId: trade.tradeId }), listTfShiftTypes()]);
   const timeZone = getDashboardTimezone(process.env.DASHBOARD_TIMEZONE);
   const outcome = recordedOutcome(trade);
   const when = trade.dateTime ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone }).format(new Date(trade.dateTime)) : 'Unrecorded';
@@ -53,7 +53,7 @@ export default async function TradePage({ params }: { params: Promise<{ id: stri
       <aside className="trade-facts">
         <section className="panel">
           <div className="panel-heading"><div><h2 className="panel-title">Trade details</h2><p className="panel-subtitle">Click any property to edit it</p></div></div>
-          <div className="panel-content"><EditableTradeFacts trade={trade} timeZone={timeZone}/></div>
+          <div className="panel-content"><EditableTradeFacts trade={trade} timeZone={timeZone} tfTypeChoices={tfTypeChoices}/></div>
         </section>
         {(trade.learning || trade.analysisNote) && <section className="panel">
           <div className="panel-heading"><div><h2 className="panel-title">Learning</h2><p className="panel-subtitle">What this trade taught you</p></div></div>
